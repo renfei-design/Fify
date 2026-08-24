@@ -34,6 +34,7 @@ for (const prompt of manifest.interface.defaultPrompt)
 const server = mcp.mcpServers?.fify;
 assert.equal(server?.command, "node");
 assert.deepEqual(server?.args, ["./server/dist/server.js"]);
+assert.equal(server?.cwd, ".");
 
 const entry = marketplace.plugins?.find((item) => item.name === "fify");
 assert.equal(entry?.source?.source, "local");
