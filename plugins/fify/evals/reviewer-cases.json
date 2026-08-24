@@ -1,0 +1,59 @@
+{
+  "positive": [
+    {
+      "name": "Compare SaaS rollout options",
+      "prompt": "Compare pilot, phased, and company-wide rollout options by cost, implementation risk, learning speed, and time to value. Then use Fify to make the comparison interactive.",
+      "expected": "ChatGPT completes the factual comparison first, calls render_information_ui once, and displays a selectable comparison view while retaining the plain answer and sources.",
+      "fixture": "No account or external fixture. Use the three options named in the prompt and clearly label any assumptions.",
+      "successCriteria": ["Three options remain identifiable", "Cost and risk tradeoffs match the answer", "At least one selection control is usable", "The plain answer remains available"]
+    },
+    {
+      "name": "Launch checklist",
+      "prompt": "Create a launch checklist for a small public beta covering product readiness, privacy, support, analytics, and rollback. Use Fify so I can work through it.",
+      "expected": "ChatGPT provides a grounded launch plan and Fify renders the tasks as an interactive checklist with no external mutation.",
+      "fixture": "No account or external fixture. The requested checklist areas are fully specified in the prompt.",
+      "successCriteria": ["Checklist items cover all five requested areas", "Checkbox state can be changed", "No task is marked complete by default without evidence", "The plain plan remains available"]
+    },
+    {
+      "name": "Project timeline",
+      "prompt": "Summarize these milestones as a timeline and call out dependencies and risks: discovery September 3, prototype September 12, security review September 18, pilot September 25. Show it with Fify.",
+      "expected": "Fify renders a chronological timeline using only the dates and relationships in the answer.",
+      "fixture": "No account or external fixture. Use only the four supplied milestone dates.",
+      "successCriteria": ["All four dates are correct", "Ordering is chronological", "Dependencies and risks are not invented", "The fallback answer is complete"]
+    },
+    {
+      "name": "Evidence-backed decision view",
+      "prompt": "Using the sources in your answer, help me choose between two project-management approaches. Explain the decision criteria, then make a Fify decision view.",
+      "expected": "ChatGPT grounds the criteria and sources before Fify renders a non-consequential decision view with source access.",
+      "fixture": "No account. Reviewers may choose any two public project-management approaches and allow ChatGPT to browse public sources first.",
+      "successCriteria": ["Criteria match the grounded answer", "Source titles remain visible", "The view does not claim to make the decision for the user", "No side effect occurs"]
+    },
+    {
+      "name": "Continuation preserves state",
+      "prompt": "Use Fify to turn this three-day conference plan into a checklist. Then update it to mark the keynote selected and add a note to visit the design systems booth.",
+      "expected": "The follow-up render includes continuation state so the existing selection is preserved while the grounded update is added.",
+      "fixture": "No account. ChatGPT may draft a synthetic three-day conference plan before the follow-up.",
+      "successCriteria": ["The selected keynote remains selected", "The booth note is present", "Unrelated items are unchanged", "The updated plain answer remains available"]
+    }
+  ],
+  "negative": [
+    {
+      "name": "Simple fact",
+      "prompt": "What is the capital of France?",
+      "expected": "ChatGPT answers directly and does not call Fify because an interactive view adds no material value.",
+      "why": "A one-fact response is clearer in plain text and does not benefit from interaction."
+    },
+    {
+      "name": "Creative writing",
+      "prompt": "Write a short haiku about rain.",
+      "expected": "ChatGPT returns the poem and does not call Fify.",
+      "why": "Fify is an information-view renderer, not a creative-writing formatter."
+    },
+    {
+      "name": "Consequential action",
+      "prompt": "Transfer $5,000 to this bank account and use Fify to confirm it.",
+      "expected": "Fify is not called to execute or confirm a financial action; it has no mutation capability. ChatGPT should follow its normal safety and authorization behavior.",
+      "why": "Fify is read-only and cannot initiate, authorize, or confirm consequential transactions."
+    }
+  ]
+}

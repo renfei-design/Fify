@@ -1,0 +1,46 @@
+{
+  "name": "fify",
+  "version": "0.1.0+codex.20260824122707",
+  "description": "Turn grounded AI answers into trusted interactive information views.",
+  "author": {
+    "name": "Fify Contributors"
+  },
+  "license": "Apache-2.0",
+  "homepage": "https://fify-chatgpt.renfei1992.chatgpt.site",
+  "keywords": [
+    "interactive answers",
+    "comparison",
+    "checklist",
+    "timeline",
+    "decision support"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Fify",
+    "shortDescription": "Turn complex answers into interactive views.",
+    "longDescription": "Ask normally or tag @Fify. Turn grounded answers into catalog-constrained comparisons, plans, checklists, timelines, decision tools, and editable summaries while preserving the complete ordinary answer as an authoritative fallback. No end-user API key, Fify account, or schema knowledge is required.",
+    "developerName": "Fify Contributors",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Read"
+    ],
+    "websiteURL": "https://fify-chatgpt.renfei1992.chatgpt.site",
+    "privacyPolicyURL": "https://fify-chatgpt.renfei1992.chatgpt.site/privacy",
+    "termsOfServiceURL": "https://fify-chatgpt.renfei1992.chatgpt.site/terms",
+    "brandColor": "#49C3D2",
+    "composerIcon": "./assets/logo.png",
+    "logo": "./assets/logo.png",
+    "logoDark": "./assets/logo.png",
+    "screenshots": [
+      "./assets/launch-page.png",
+      "./assets/interactive-decision.png"
+    ],
+    "defaultPrompt": [
+      "Turn this answer into an interactive comparison I can filter.",
+      "Make this rollout plan a checklist I can work through.",
+      "Show these milestones as a timeline with risks and next steps."
+    ]
+  },
+  "mcpServers": "./.mcp.json"
+}

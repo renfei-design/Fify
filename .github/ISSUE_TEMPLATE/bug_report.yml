@@ -1,0 +1,54 @@
+name: Bug report
+description: Report a reproducible problem in Fify
+title: "[Bug]: "
+labels: [bug, triage]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for helping improve Fify. Never include API keys, private prompts, or sensitive data.
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Surface
+      options:
+        - Browser application
+        - Codex plugin
+        - MCP Apps server or widget
+        - Public package
+        - Documentation
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: Provide the smallest safe sequence that reproduces the issue.
+      placeholder: "1. Run ...\n2. Open ...\n3. Observe ..."
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, Node version, pnpm version, browser or host, and Fify commit/version.
+    validations:
+      required: true
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety check
+      options:
+        - label: I removed credentials, private prompts, and sensitive data from this report.
+          required: true

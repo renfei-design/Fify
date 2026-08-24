@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "fify": {
+      "command": "node",
+      "args": ["./server/dist/server.js"]
+    }
+  }
+}

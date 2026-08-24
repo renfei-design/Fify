@@ -1,0 +1,28 @@
+{
+  "name": "@fify/mcp-app",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Installable MCP Apps server and inline information UI for Fify.",
+  "type": "module",
+  "main": "./dist/server.js",
+  "types": "./dist/server.d.ts",
+  "exports": {
+    ".": "./dist/server.js",
+    "./http": "./dist/http.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run src",
+    "start": "node dist/server.js",
+    "preview": "node scripts/preview.mjs",
+    "preview:interactions": "node scripts/interaction-preview.mjs",
+    "preview:catalog": "node scripts/catalog-preview.mjs"
+  },
+  "dependencies": {
+    "@fify/a2ui": "workspace:*",
+    "@fify/core": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "zod": "^4.3.6"
+  }
+}

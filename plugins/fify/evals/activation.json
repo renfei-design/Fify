@@ -1,0 +1,19 @@
+{
+  "positive": [
+    "Compare these three health plans by cost, coverage, and tradeoffs.",
+    "Turn this launch plan into an editable checklist.",
+    "Show the project history as a timeline.",
+    "Build a decision tool for these apartment options.",
+    "Make this a three-day itinerary I can refine.",
+    "@Fify explain the system architecture.",
+    "Show this as an interactive view."
+  ],
+  "negative": [
+    "What is the capital of France?",
+    "Thanks!",
+    "Write a haiku about rain.",
+    "Explain this in one sentence.",
+    "What does HTTP stand for?",
+    "Tell me a short bedtime story."
+  ]
+}

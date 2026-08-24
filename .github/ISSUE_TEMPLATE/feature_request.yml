@@ -1,0 +1,29 @@
+name: Feature proposal
+description: Propose a user problem or information pattern for Fify
+title: "[Proposal]: "
+labels: [proposal]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: User problem
+      description: What is difficult to understand or act on as plain text today?
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Desired outcome
+      description: Describe the useful interaction or information structure, not generated implementation code.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Examples or evidence
+      description: Add synthetic, public, or redacted examples only.
+  - type: textarea
+    id: boundary
+    attributes:
+      label: Trust and accessibility considerations
+      description: Note grounding, actions, keyboard behavior, screen-reader behavior, and fallback needs.

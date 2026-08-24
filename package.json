@@ -1,0 +1,57 @@
+{
+  "name": "fify",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Open-source infrastructure for AI answers that render as trusted, interactive interfaces.",
+  "author": "Fify Contributors",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/renfei-design/Fify.git"
+  },
+  "homepage": "https://github.com/renfei-design/Fify#readme",
+  "bugs": {
+    "url": "https://github.com/renfei-design/Fify/issues"
+  },
+  "packageManager": "pnpm@11.1.3",
+  "engines": {
+    "node": ">=22",
+    "pnpm": ">=11"
+  },
+  "keywords": [
+    "ai-ui",
+    "generative-ui",
+    "a2ui",
+    "mcp-apps",
+    "codex-plugin"
+  ],
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev --parallel",
+    "web": "pnpm --filter @fify/demo dev",
+    "test": "turbo run test && node --test scripts/*.test.mjs",
+    "eval": "turbo run eval",
+    "test:e2e": "playwright test",
+    "plugin:build": "pnpm --filter @fify/core build && pnpm --filter @fify/mcp-app build",
+    "plugin:bundle": "node scripts/install-codex-plugin.mjs --bundle-only",
+    "plugin:validate": "node scripts/validate-codex-plugin.mjs",
+    "codex:install": "node scripts/install-codex-plugin.mjs",
+    "codex:build": "pnpm plugin:build",
+    "plugin:test": "pnpm plugin:validate && pnpm --filter @fify/core test && pnpm --filter @fify/mcp-app test",
+    "check:public": "node scripts/check-public-safety.mjs",
+    "check:history": "node scripts/check-public-safety.mjs --history",
+    "verify:packages": "pnpm build && node scripts/verify-packages.mjs",
+    "typecheck": "turbo run typecheck",
+    "format": "prettier --write .",
+    "check": "pnpm check:public && pnpm typecheck && pnpm test && pnpm eval && pnpm build && pnpm plugin:validate && node scripts/verify-packages.mjs"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
+    "@playwright/test": "1.62.1",
+    "@types/node": "^22.10.0",
+    "prettier": "^3.7.4",
+    "turbo": "^2.7.4",
+    "typescript": "5.9.2",
+    "vitest": "4.0.17"
+  }
+}

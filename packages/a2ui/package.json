@@ -1,0 +1,39 @@
+{
+  "name": "@fify/a2ui",
+  "version": "0.1.0",
+  "description": "Lean A2UI v1.0 message contracts and surface reducer for Fify.",
+  "author": "Fify Contributors",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/renfei-design/Fify.git",
+    "directory": "packages/a2ui"
+  },
+  "files": [
+    "dist/index.js",
+    "dist/index.js.map",
+    "dist/index.d.ts",
+    "dist/index.d.ts.map"
+  ],
+  "sideEffects": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "fify": {
+    "stability": "supported-prerelease"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run src"
+  },
+  "dependencies": {
+    "zod": "^4.3.6"
+  }
+}

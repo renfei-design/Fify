@@ -1,0 +1,231 @@
+.fify-launch {
+  position: relative;
+  z-index: 2;
+  min-height: 100svh;
+  color: #f4f4f7;
+  background:
+    radial-gradient(
+      circle at 75% 8%,
+      rgba(174, 147, 255, 0.16),
+      transparent 34rem
+    ),
+    linear-gradient(180deg, #101014 0%, #15151b 52%, #101014 100%);
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+.fify-launch * {
+  box-sizing: border-box;
+}
+.fify-launch a {
+  color: inherit;
+}
+.fify-launch__nav,
+.fify-launch__main,
+.fify-launch__footer {
+  width: min(1120px, calc(100% - 40px));
+  margin: 0 auto;
+}
+.fify-launch__nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 0;
+}
+.fify-launch__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  text-decoration: none;
+}
+.fify-launch__brand img {
+  width: 28px;
+  height: 28px;
+}
+.fify-launch__navlinks {
+  display: flex;
+  gap: 20px;
+  color: #b8b8c2;
+  font-size: 14px;
+}
+.fify-launch__navlinks a {
+  text-decoration: none;
+}
+.fify-launch__hero {
+  padding: 108px 0 84px;
+  text-align: center;
+}
+.fify-launch__eyebrow {
+  display: inline-flex;
+  padding: 8px 12px;
+  border: 1px solid #3a3946;
+  border-radius: 999px;
+  color: #d1c8ff;
+  background: rgba(255, 255, 255, 0.035);
+  font-size: 13px;
+}
+.fify-launch h1 {
+  max-width: 870px;
+  margin: 24px auto 18px;
+  font-size: clamp(48px, 8vw, 92px);
+  line-height: 0.96;
+  letter-spacing: -0.065em;
+}
+.fify-launch__lede {
+  max-width: 680px;
+  margin: 0 auto;
+  color: #b9b9c5;
+  font-size: clamp(18px, 2.2vw, 22px);
+  line-height: 1.55;
+}
+.fify-launch__prompts {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  padding: 16px 0 96px;
+}
+.fify-launch__card {
+  min-height: 250px;
+  padding: 24px;
+  border: 1px solid #303039;
+  border-radius: 22px;
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.06),
+    rgba(255, 255, 255, 0.018)
+  );
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.18);
+}
+.fify-launch__card span {
+  color: #a997ff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.fify-launch__card h2 {
+  margin: 34px 0 12px;
+  font-size: 28px;
+  letter-spacing: -0.035em;
+}
+.fify-launch__card p {
+  color: #b7b7c1;
+  line-height: 1.55;
+}
+.fify-launch__prompt {
+  display: block;
+  margin-top: 24px;
+  padding: 14px;
+  border-radius: 12px;
+  color: #e1ddef;
+  background: #202027;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.fify-launch__trust {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 56px;
+  padding: 80px 0;
+  border-top: 1px solid #2b2b33;
+}
+.fify-launch__trust h2 {
+  margin: 0;
+  font-size: clamp(34px, 5vw, 58px);
+  line-height: 1.05;
+  letter-spacing: -0.05em;
+}
+.fify-launch__trust ul {
+  display: grid;
+  gap: 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: #c5c5ce;
+  line-height: 1.5;
+}
+.fify-launch__trust li::before {
+  content: "✓";
+  margin-right: 10px;
+  color: #a997ff;
+}
+.fify-launch__footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 34px 0 52px;
+  border-top: 1px solid #2b2b33;
+  color: #92929e;
+  font-size: 13px;
+}
+.fify-launch__footer nav {
+  display: flex;
+  gap: 18px;
+}
+
+.fify-policy {
+  position: relative;
+  z-index: 2;
+  min-height: 100svh;
+  padding: 72px 20px;
+  color: #ececf2;
+  background: #171717;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+}
+.fify-policy article {
+  width: min(760px, 100%);
+  margin: 0 auto;
+}
+.fify-policy a {
+  color: #cbbfff;
+}
+.fify-policy h1 {
+  margin: 18px 0 10px;
+  font-size: clamp(38px, 7vw, 62px);
+  letter-spacing: -0.05em;
+}
+.fify-policy h2 {
+  margin-top: 42px;
+  font-size: 22px;
+}
+.fify-policy p,
+.fify-policy li {
+  color: #bdbdc7;
+  line-height: 1.72;
+}
+.fify-policy li + li {
+  margin-top: 8px;
+}
+.fify-policy__back {
+  text-decoration: none;
+  font-size: 14px;
+}
+.fify-policy__date {
+  color: #8f8f9a !important;
+}
+
+@media (max-width: 760px) {
+  .fify-launch__prompts {
+    grid-template-columns: 1fr;
+  }
+  .fify-launch__hero {
+    padding: 72px 0 56px;
+  }
+  .fify-launch__trust {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+  .fify-launch__navlinks {
+    display: none;
+  }
+  .fify-launch__footer {
+    flex-direction: column;
+  }
+}
