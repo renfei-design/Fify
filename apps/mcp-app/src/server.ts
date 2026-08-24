@@ -23,7 +23,7 @@ const mediaInput = z.object({
   caption: z.string().max(400),
   role: z.enum(["identity", "evidence", "illustration"]),
   sourceId: semanticId,
-}).strict();
+}).strict().describe("Optional attributed visual evidence. For a named-person profile, include one identity portrait only when an allowed Wikimedia or Openverse image URL and its source page are already grounded.");
 const itemInput = z.object({ id: semanticId, label: z.string().min(1).max(90), value: z.string().max(120), detail: z.string().max(2_048), sourceIds: z.array(semanticId).max(8) }).strict();
 const sectionInput = z.object({ id: semanticId, title: z.string().min(1).max(110), body: z.string().max(4_000), items: z.array(itemInput).max(12), sourceIds: z.array(semanticId).max(8) }).strict();
 const continuationInput = z.object({ priorRunId: z.string().min(1).max(96), checkedIds: z.array(semanticId).max(96), selectedIds: z.array(semanticId).max(24), inputs: z.record(semanticId, z.string().max(500)) }).strict();
@@ -60,14 +60,14 @@ export function createFifyServer(store = new InformationUIRunStore()) {
 
   registerInformationUIResource(server, "fify-information-ui", INFORMATION_UI_RESOURCE_URI);
   LEGACY_INFORMATION_UI_RESOURCE_URIS.forEach((uri, index) =>
-    registerInformationUIResource(server, `fify-information-ui-legacy-v${3 - index}`, uri),
+    registerInformationUIResource(server, `fify-information-ui-legacy-v${4 - index}`, uri),
   );
 
   server.registerTool(
   "render_information_ui",
   {
     title: "Render information as an interactive view",
-    description: "Render a fully grounded answer as a non-consequential interactive information view when structure or interaction materially improves it. Complete factual reasoning first and always pass the authoritative plain answer.",
+    description: "Render a fully grounded answer as a non-consequential interactive information view when structure or interaction materially improves it. Complete factual reasoning first and always pass the authoritative plain answer. For named-person profiles, preserve the editorial profile treatment by including an attributed identity portrait when research already provides an allowed Wikimedia or Openverse image and source page; never invent or guess media URLs.",
     inputSchema: {
       version: z.literal("1.0"),
       originalRequest: z.string(),

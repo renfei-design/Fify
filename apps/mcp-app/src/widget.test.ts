@@ -127,6 +127,11 @@ describe("information UI widget replay", () => {
     expect(informationUIWidgetHtml).toContain("gx-visual-canvas");
     expect(informationUIWidgetHtml).toContain("upload.wikimedia.org");
     expect(informationUIWidgetHtml).toContain("api.openverse.org");
+    expect(informationUIWidgetHtml).toContain("blueprint-profile-reference");
+    expect(informationUIWidgetHtml).toContain("gx-media-copy");
+    expect(informationUIWidgetHtml).toContain("Photo:");
+    expect(informationUIWidgetHtml).toContain("Source ↗");
+    expect(informationUIWidgetHtml).toContain("grid-template-columns: minmax(260px, .78fr) minmax(0, 1.22fr)");
     expect(informationUIWidgetHtml).toContain("@media (max-width: 720px)");
     expect(informationUIWidgetHtml).toContain("prefers-reduced-motion");
     expect(informationUIWidgetHtml).not.toContain("safe layout fallback");
@@ -140,7 +145,8 @@ describe("information UI widget replay", () => {
 
   it("uses a new MCP resource cache key for the richer renderer", () => {
     expect(informationUIWidgetHtml).toContain("renderMedia");
-    expect(INFORMATION_UI_RESOURCE_URI).toBe("ui://fify/information-ui-v4.html");
+    expect(INFORMATION_UI_RESOURCE_URI).toBe("ui://fify/information-ui-v5.html");
+    expect(LEGACY_INFORMATION_UI_RESOURCE_URIS).toContain("ui://fify/information-ui-v4.html");
     expect(LEGACY_INFORMATION_UI_RESOURCE_URIS).toContain("ui://fify/information-ui-v3.html");
   });
 

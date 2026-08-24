@@ -15,6 +15,7 @@ export function runInformationUIWidget(initialSequence = 0) {
   let mounted = false;
   let fallbackText = "";
   let expanded = false;
+  let currentSources = new Map<string, AnyRecord>();
   const pending = new Map<number, { resolve: (value: unknown) => void; reject: (reason: unknown) => void }>();
   const state = {
     checked: new Set<string>(),
@@ -83,7 +84,7 @@ export function runInformationUIWidget(initialSequence = 0) {
 
   function renderFacts(node: AnyRecord, primary: boolean) {
     const section = element("section", `gx-surface gx-facts${primary ? " is-primary" : ""}`);
-    section.append(heading(node, primary ? "Overview" : "Key facts"));
+    section.append(heading(node, primary ? "Identity" : "Details"));
     const grid = element("dl", "gx-fact-grid");
     const entries: Array<{ element: HTMLElement; text: string }> = [];
     for (const item of node.items ?? []) {
@@ -347,13 +348,21 @@ export function runInformationUIWidget(initialSequence = 0) {
       placeholder.querySelector("strong")!.textContent = "Visual unavailable";
     }
     frame.append(placeholder);
+    const overlay = element("div", "gx-media-copy");
+    overlay.append(element("strong", "", String(node.title || node.label || "")));
+    frame.append(overlay);
     figure.append(frame);
-    if (node.text) {
-      const caption = element("figcaption");
-      caption.append(element("span", "gx-eyebrow", node.mediaRole === "identity" ? "Grounded portrait" : "Grounded visual"));
-      caption.append(element("p", "", String(node.text)));
-      figure.append(caption);
+    const caption = element("figcaption");
+    caption.append(element("span", "", node.text ? `Photo: ${String(node.text)}` : "Openly licensed visual"));
+    const source = currentSources.get(String(node.meta || ""));
+    if (source?.url) {
+      const link = element("a", "", "Source ↗");
+      link.href = String(source.url);
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      caption.append(link);
     }
+    figure.append(caption);
     return figure;
   }
 
@@ -592,7 +601,6 @@ export function runInformationUIWidget(initialSequence = 0) {
       const primary = element("div", "gx-primary-region");
       const supporting = element("div", "gx-supporting-grid");
       const renderedPrimary = renderNode(String(directPrimary.id), nodes, 0, new Set(path));
-      if (renderedPrimary) primary.append(renderedPrimary);
       if (identityMedia) {
         const renderedMedia = renderNode(String(identityMedia.id), nodes, 1, new Set(path));
         if (renderedMedia) {
@@ -600,6 +608,7 @@ export function runInformationUIWidget(initialSequence = 0) {
           primary.append(renderedMedia);
         }
       }
+      if (renderedPrimary) primary.append(renderedPrimary);
       childNodes.filter((child) => child !== directPrimary && child !== identityMedia).forEach((child, index) => {
         const rendered = renderNode(String(child.id), nodes, index + 1, new Set(path));
         if (rendered) supporting.append(rendered);
@@ -668,8 +677,10 @@ export function runInformationUIWidget(initialSequence = 0) {
     for (const id of continuation?.checkedIds ?? []) state.checked.add(String(id));
     for (const id of continuation?.selectedIds ?? []) state.selected.add(String(id));
     for (const [id, value] of Object.entries(continuation?.inputs ?? {})) state.inputs.set(String(id), String(value));
+    currentSources = new Map<string, AnyRecord>((envelope?.sources ?? []).map((source: AnyRecord) => [String(source.id), source]));
     content.replaceChildren();
-    content.className = `gx-experience topology-${String(exp.representation?.topology || "editorial-stack")}`;
+    const blueprint = String(exp.representation?.blueprintIds?.[0] || "open-composition");
+    content.className = `gx-experience topology-${String(exp.representation?.topology || "editorial-stack")} blueprint-${blueprint}`;
     content.removeAttribute("aria-busy");
     const nodes = new Map<string, AnyRecord>((exp.nodes ?? []).map((node: AnyRecord) => [String(node.id), node]));
     const rootId = nodes.has("root") ? "root" : String((exp.nodes ?? [])[0]?.id || "");

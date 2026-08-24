@@ -78,6 +78,8 @@ describe("InformationEnvelopeV1", () => {
       createDefaultGroundedCompositionPlan(withMedia),
       "run-media",
     );
+    expect(result.composition.topology).toBe("focal-split");
+    expect(result.experience.representation.blueprintIds).toEqual(["profile-reference"]);
     expect(result.experience.nodes.find((node) => node.id === "media-subject-portrait")).toMatchObject({
       type: "Image",
       value: withMedia.media[0]!.url,

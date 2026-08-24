@@ -362,7 +362,10 @@ function defaultComponent(envelope: InformationEnvelopeV1, section: InformationE
 /** Trusted, deterministic fallback. It never claims to be model-authored. */
 export function createDefaultGroundedCompositionPlan(envelopeInput: InformationEnvelopeV1): GroundedCompositionPlan {
   const envelope = informationEnvelopeV1Schema.parse(envelopeInput);
-  const topology = /compar|versus|\bvs\b/.test(envelope.originalRequest.toLowerCase())
+  const hasIdentityMedia = (envelope.media ?? []).some((item) => item.role === "identity");
+  const topology = hasIdentityMedia
+    ? "focal-split"
+    : /compar|versus|\bvs\b/.test(envelope.originalRequest.toLowerCase())
     ? "responsive-grid"
     : /timeline|chronolog/.test(envelope.originalRequest.toLowerCase())
       ? "timeline-spine"
@@ -444,10 +447,11 @@ function makeNode(input: Partial<UINode> & Pick<UINode, "id" | "type">): UINode 
 
 function createRepresentation(envelope: InformationEnvelopeV1, plan: GroundedCompositionPlan): RepresentationPlan {
   const media = envelope.media ?? [];
+  const hasIdentityMedia = media.some((item) => item.role === "identity");
   return representationPlanSchema.parse({
     version: "1.0",
-    mode: "open",
-    blueprintIds: ["open-composition"],
+    mode: hasIdentityMedia ? "blueprint" : "open",
+    blueprintIds: [hasIdentityMedia ? "profile-reference" : "open-composition"],
     confidence: 1,
     userJob: envelope.originalRequest.slice(0, 160),
     informationShapes: [
