@@ -13,7 +13,7 @@ pnpm install
 pnpm --filter @fify/example-minimal-react dev
 ```
 
-Open <http://localhost:3000>.
+Open the local URL printed by Next.js. The port is selected at startup and may change when the default is already in use.
 
 The page opens with a deliberately deterministic preview. Add an OpenAI API key and ask a question to run the live two-stage pipeline: one strict structured output creates the information envelope and a second chooses only the catalog layout. The key is held in page memory and forwarded through the local server route; it is not written to disk.
 

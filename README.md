@@ -34,13 +34,12 @@ The missing layer is information design: choosing the right structure, visual hi
 
 Fify separates **what the answer says** from **how the answer should be presented**.
 
-```text
-user request + trusted information
-  → grounded answer
-  → semantic UX decision
-  → validated information graph
-  → progressive A2UI stream
-  → product-owned interface
+```mermaid
+flowchart LR
+    A["User asks"] --> B["AI creates the answer"]
+    B --> C["Fify organizes the information"]
+    C --> D["Trusted components create the UI"]
+    D --> E["Clear, interactive answer"]
 ```
 
 The answer stays authoritative. Fify designs its presentation.
@@ -116,7 +115,8 @@ Requirements:
 
 - Node.js 22 or newer;
 - pnpm 11 or newer;
-- an OpenAI API key for live browser generation, or a Codex installation for the local plugin path.
+- an OpenAI API key only for live model generation in the browser;
+- a compatible Codex installation only for the local plugin path.
 
 ### Option 1: browser application
 
@@ -128,7 +128,7 @@ pnpm install
 pnpm web
 ```
 
-Open <http://localhost:3000>. Choose **Settings** at the bottom of the left navigation, save your OpenAI API key, and ask normally.
+Open the local URL printed by Next.js. Choose **Settings** at the bottom of the left navigation, save your OpenAI API key, and ask normally. The port is selected at startup and may change when the default is already in use.
 
 The browser key is stored in that tab's session storage and forwarded only with generation requests. It is not written into conversation history or committed to the repository. A server operator can configure `OPENAI_API_KEY` instead.
 
@@ -206,9 +206,11 @@ const result = createInformationUI({
 });
 ```
 
-`result.messages` is a validated A2UI stream. `result.fallbackText` is the authoritative text fallback.
+`result.messages` is a validated, ordered A2UI message sequence that a host can reduce or deliver over its own transport. `result.fallbackText` is the authoritative text fallback.
 
-### Add live model composition
+### Generate an answer and layout with OpenAI
+
+Use the optional OpenAI adapter from server-side code only. It makes two structured-output calls: one creates a validated information envelope from the prompt, and the second selects a catalog-constrained composition. This adapter does not retrieve current information or produce citations.
 
 ```ts
 import { generateOpenAIInformationUI } from "@fify/core/openai";
@@ -219,13 +221,15 @@ const result = await generateOpenAIInformationUI({
 });
 ```
 
+Applications that need current or private facts should ground those facts through a trusted host adapter before rendering them. Never expose a provider key in browser-delivered code.
+
 Run the complete supported example:
 
 ```bash
 pnpm --filter @fify/example-minimal-react dev
 ```
 
-See the [minimal React starter](examples/minimal-react) for the full core → A2UI → React flow.
+Open the local URL printed by Next.js. See the [minimal React starter](examples/minimal-react) for the full core → A2UI → React flow.
 
 ## Trust boundary
 
@@ -306,6 +310,18 @@ pnpm test:e2e
 - [Contributing](CONTRIBUTING.md)
 - [Security](SECURITY.md)
 - [Support](SUPPORT.md)
+
+## Open-source acknowledgements
+
+Fify is built on—and has learned from—a broad open-source ecosystem. We are grateful to the maintainers and contributors behind these projects:
+
+- **Protocols and host integration:** [A2UI](https://a2ui.org/) for declarative, catalog-constrained interface messages; [Model Context Protocol](https://modelcontextprotocol.io/), its [TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk), and [MCP Apps](https://modelcontextprotocol.io/extensions/apps/overview) for portable tools and embedded host interfaces.
+- **Runtime and interface:** [Node.js](https://nodejs.org/), [React](https://react.dev/), [Next.js](https://nextjs.org/), [shadcn/ui](https://ui.shadcn.com/), [Tailwind CSS](https://tailwindcss.com/), [PostCSS](https://postcss.org/), [Zod](https://zod.dev/), [Lucide](https://lucide.dev/), [Class Variance Authority](https://cva.style/), [clsx](https://github.com/lukeed/clsx), and [tailwind-merge](https://github.com/dcastil/tailwind-merge).
+- **Engineering, documentation, and quality:** [TypeScript](https://www.typescriptlang.org/) and [DefinitelyTyped](https://github.com/DefinitelyTyped/DefinitelyTyped), [pnpm](https://pnpm.io/), [Turborepo](https://github.com/vercel/turborepo), [Vitest](https://vitest.dev/), [Playwright](https://playwright.dev/), [axe-core](https://github.com/dequelabs/axe-core), [Prettier](https://prettier.io/), [esbuild](https://esbuild.github.io/), [Sharp](https://sharp.pixelplumbing.com/), and [Mermaid](https://mermaid.js.org/). Continuous integration uses [GitHub Actions](https://github.com/features/actions) with [checkout](https://github.com/actions/checkout), [setup-node](https://github.com/actions/setup-node), and [pnpm/action-setup](https://github.com/pnpm/action-setup).
+- **Trusted public data and media:** [Wikipedia](https://www.wikipedia.org/), [Wikimedia Commons](https://commons.wikimedia.org/), [Openverse](https://openverse.org/), and [Open-Meteo](https://open-meteo.com/). Fify preserves source and license attribution where returned content requires it.
+- **Related work and architectural influences:** [json-render](https://github.com/vercel-labs/json-render), [AI SDK generative UI](https://ai-sdk.dev/docs/ai-sdk-ui/generative-user-interfaces), and [AG-UI](https://docs.ag-ui.com/). These projects informed Fify's design exploration; they are not presented as Fify runtime dependencies.
+
+The package manifests and [pnpm lockfile](pnpm-lock.yaml) are the authoritative record of direct and transitive software dependencies and their exact versions. Each upstream project retains its own license and trademarks; Fify's Apache 2.0 license applies to Fify's original code.
 
 ## License
 

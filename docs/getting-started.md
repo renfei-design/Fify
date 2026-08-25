@@ -47,7 +47,7 @@ pnpm install
 pnpm web
 ```
 
-Open <http://localhost:3000>, choose **Settings** in the lower-left navigation, save an OpenAI API key, and ask a question. The browser-held key is stored in session storage only and is forwarded with generation requests. It is not stored with conversation history.
+Open the local URL printed by Next.js, choose **Settings** in the lower-left navigation, save an OpenAI API key, and ask a question. The port is selected at startup and may change when the default is already in use. The browser-held key is stored in session storage only and is forwarded with generation requests. It is not stored with conversation history.
 
 For a shared local or deployed environment, configure the key on the server instead:
 
