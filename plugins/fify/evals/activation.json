@@ -1,14 +1,21 @@
 {
   "positive": [
+    "@Fify compare these three health plans by cost, coverage, and tradeoffs.",
+    "Use Fify to turn this launch plan into an editable checklist.",
+    "Render the project history as an interactive timeline.",
+    "Build a Fify decision tool for these apartment options.",
+    "Show this three-day itinerary as an interactive view I can refine.",
+    "@Fify explain the system architecture.",
+    "Use Fify to turn these operating results into an executive briefing for leadership.",
+    "Show this as an interactive view."
+  ],
+  "negative": [
     "Compare these three health plans by cost, coverage, and tradeoffs.",
     "Turn this launch plan into an editable checklist.",
     "Show the project history as a timeline.",
     "Build a decision tool for these apartment options.",
     "Make this a three-day itinerary I can refine.",
-    "@Fify explain the system architecture.",
-    "Show this as an interactive view."
-  ],
-  "negative": [
+    "Turn these operating results into an executive briefing for leadership.",
     "What is the capital of France?",
     "Thanks!",
     "Write a haiku about rain.",

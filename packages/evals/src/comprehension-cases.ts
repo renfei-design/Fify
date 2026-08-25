@@ -368,6 +368,93 @@ export const comprehensionBenchmarkCasesV1 = [
     ],
   },
   {
+    id: "executive-operating-briefing",
+    title: "Executive operating briefing",
+    attentionMode: "glance",
+    prompt:
+      "Turn these operating results into an executive briefing with signals, the decision, risks, and next actions.",
+    userTask:
+      "Understand the operating signal, make the pending decision, and see ownership without reading a narrative.",
+    sourceContent:
+      "Revenue remains on plan. Enterprise implementation backlog is up 18%, and renewal exposure is concentrated in three strategic accounts. The proposed response is a 90-day partner-capacity plan owned by the COO. Leadership must approve or reject the plan by Friday. If approved, the COO will return next Tuesday with partner commitments and an account-level renewal mitigation review.",
+    essentialFacts: [
+      {
+        id: "revenue-on-plan",
+        description: "Revenue remains on plan",
+        termGroups: [["revenue"], ["on plan"]],
+      },
+      {
+        id: "backlog-rise",
+        description: "Enterprise implementation backlog is up 18%",
+        termGroups: [["implementation backlog", "backlog"], ["18%"]],
+      },
+      {
+        id: "renewal-exposure",
+        description: "Renewal exposure is concentrated in three accounts",
+        termGroups: [
+          ["renewal exposure", "renewal risk"],
+          ["three strategic accounts", "3 strategic accounts"],
+        ],
+      },
+      {
+        id: "pending-decision",
+        description: "Leadership must decide on the 90-day plan by Friday",
+        termGroups: [
+          ["approve", "reject", "decision", "decide"],
+          ["90-day"],
+          ["Friday"],
+        ],
+      },
+      {
+        id: "owner",
+        description: "The COO owns the partner-capacity plan",
+        termGroups: [["COO"], ["partner-capacity", "partner capacity"]],
+      },
+    ],
+    primaryFactIds: ["backlog-rise", "renewal-exposure", "pending-decision"],
+    requiredRelationships: [
+      {
+        id: "decision-deadline",
+        description: "The 90-day plan decision remains paired with Friday",
+        leftTerms: ["90-day"],
+        rightTerms: ["Friday"],
+        maxDistanceWords: 28,
+      },
+      {
+        id: "plan-owner",
+        description: "The partner-capacity plan remains paired with the COO",
+        leftTerms: ["partner-capacity", "partner capacity"],
+        rightTerms: ["COO"],
+        maxDistanceWords: 24,
+      },
+    ],
+    deferrableFacts: [
+      {
+        id: "follow-up",
+        description:
+          "The COO will return Tuesday with partner commitments and renewal mitigation",
+        termGroups: [
+          ["Tuesday"],
+          ["partner commitments"],
+          ["renewal mitigation", "account-level renewal"],
+        ],
+      },
+    ],
+    forbiddenClaims: [
+      {
+        id: "revenue-miss",
+        description: "The source says revenue is on plan, not below plan",
+        termGroups: [["revenue"], ["below plan", "missed plan"]],
+      },
+      {
+        id: "company-wide-renewal-risk",
+        description: "Renewal exposure is limited to three strategic accounts",
+        termGroups: [["company-wide renewal", "all renewals"]],
+      },
+    ],
+    wordBudget: 90,
+  },
+  {
     id: "two-day-constraint-plan",
     title: "Constraint-aware schedule",
     attentionMode: "explore",

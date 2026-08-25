@@ -67,7 +67,10 @@ export const informationSourceV1Schema = z
   .object({
     id: semanticIdSchema,
     title: z.string().min(1).max(180),
-    url: z.string().max(2_048).refine(isSafePublicHttpsUrl, "Source URL must be a public HTTPS URL."),
+    url: z
+      .string()
+      .max(2_048)
+      .refine(isSafePublicHttpsUrl, "Source URL must be a public HTTPS URL."),
   })
   .strict();
 
@@ -123,6 +126,7 @@ const informationEnvelopeV1BaseSchema = z
     originalRequest: z.string().min(1).max(2_000),
     groundedAnswer: z.string().min(1).max(16_000),
     locale: z.string().min(2).max(35),
+    profileSubject: z.string().min(1).max(100).optional(),
     sections: z.array(informationSectionV1Schema).min(1).max(8),
     sources: z.array(informationSourceV1Schema).max(32),
     media: z.array(informationMediaV1Schema).max(4).optional(),
@@ -131,11 +135,14 @@ const informationEnvelopeV1BaseSchema = z
   })
   .strict();
 
-function envelopeContentLength(value: z.infer<typeof informationEnvelopeV1BaseSchema>) {
+function envelopeContentLength(
+  value: z.infer<typeof informationEnvelopeV1BaseSchema>,
+) {
   const strings = [
     value.originalRequest,
     value.groundedAnswer,
     value.locale,
+    value.profileSubject ?? "",
     ...value.suggestedRefinements,
     ...value.sources.flatMap((source) => [source.id, source.title, source.url]),
     ...(value.media ?? []).flatMap((media) => [
@@ -164,59 +171,102 @@ function envelopeContentLength(value: z.infer<typeof informationEnvelopeV1BaseSc
 }
 
 /** Host-authored factual payload. Unknown fields and unresolved provenance are rejected. */
-export const informationEnvelopeV1Schema = informationEnvelopeV1BaseSchema.superRefine(
-  (envelope, context) => {
+export const informationEnvelopeV1Schema =
+  informationEnvelopeV1BaseSchema.superRefine((envelope, context) => {
     const ids = new Set<string>();
     const itemIds = new Set<string>();
     const inputIds = new Set<string>();
     envelope.sources.forEach((source, index) => {
       if (ids.has(source.id))
-        context.addIssue({ code: "custom", path: ["sources", index, "id"], message: `Duplicate ID '${source.id}'.` });
+        context.addIssue({
+          code: "custom",
+          path: ["sources", index, "id"],
+          message: `Duplicate ID '${source.id}'.`,
+        });
       ids.add(source.id);
     });
     const sourceIds = new Set(envelope.sources.map((source) => source.id));
     (envelope.media ?? []).forEach((media, index) => {
       if (ids.has(media.id))
-        context.addIssue({ code: "custom", path: ["media", index, "id"], message: `Duplicate ID '${media.id}'.` });
+        context.addIssue({
+          code: "custom",
+          path: ["media", index, "id"],
+          message: `Duplicate ID '${media.id}'.`,
+        });
       ids.add(media.id);
       if (!sourceIds.has(media.sourceId))
-        context.addIssue({ code: "custom", path: ["media", index, "sourceId"], message: `Unknown source '${media.sourceId}'.` });
+        context.addIssue({
+          code: "custom",
+          path: ["media", index, "sourceId"],
+          message: `Unknown source '${media.sourceId}'.`,
+        });
     });
     envelope.sections.forEach((section, sectionIndex) => {
       if (ids.has(section.id))
-        context.addIssue({ code: "custom", path: ["sections", sectionIndex, "id"], message: `Duplicate ID '${section.id}'.` });
+        context.addIssue({
+          code: "custom",
+          path: ["sections", sectionIndex, "id"],
+          message: `Duplicate ID '${section.id}'.`,
+        });
       ids.add(section.id);
       inputIds.add(section.id);
       section.sourceIds.forEach((sourceId) => {
         if (!sourceIds.has(sourceId))
-          context.addIssue({ code: "custom", path: ["sections", sectionIndex, "sourceIds"], message: `Unknown source '${sourceId}'.` });
+          context.addIssue({
+            code: "custom",
+            path: ["sections", sectionIndex, "sourceIds"],
+            message: `Unknown source '${sourceId}'.`,
+          });
       });
       section.items.forEach((item, itemIndex) => {
         if (ids.has(item.id))
-          context.addIssue({ code: "custom", path: ["sections", sectionIndex, "items", itemIndex, "id"], message: `Duplicate ID '${item.id}'.` });
+          context.addIssue({
+            code: "custom",
+            path: ["sections", sectionIndex, "items", itemIndex, "id"],
+            message: `Duplicate ID '${item.id}'.`,
+          });
         ids.add(item.id);
         itemIds.add(item.id);
         item.sourceIds.forEach((sourceId) => {
           if (!sourceIds.has(sourceId))
-            context.addIssue({ code: "custom", path: ["sections", sectionIndex, "items", itemIndex, "sourceIds"], message: `Unknown source '${sourceId}'.` });
+            context.addIssue({
+              code: "custom",
+              path: ["sections", sectionIndex, "items", itemIndex, "sourceIds"],
+              message: `Unknown source '${sourceId}'.`,
+            });
         });
       });
     });
     if (envelopeContentLength(envelope) > 24_000)
-      context.addIssue({ code: "custom", path: [], message: "InformationEnvelopeV1 exceeds the 24,000-character content limit." });
+      context.addIssue({
+        code: "custom",
+        path: [],
+        message:
+          "InformationEnvelopeV1 exceeds the 24,000-character content limit.",
+      });
     const continuation = envelope.continuationState;
     if (continuation) {
-      for (const id of [...continuation.checkedIds, ...continuation.selectedIds]) {
+      for (const id of [
+        ...continuation.checkedIds,
+        ...continuation.selectedIds,
+      ]) {
         if (!itemIds.has(id))
-          context.addIssue({ code: "custom", path: ["continuationState"], message: `Continuation state references unknown item '${id}'.` });
+          context.addIssue({
+            code: "custom",
+            path: ["continuationState"],
+            message: `Continuation state references unknown item '${id}'.`,
+          });
       }
       for (const id of Object.keys(continuation.inputs)) {
         if (!inputIds.has(id) && !itemIds.has(id))
-          context.addIssue({ code: "custom", path: ["continuationState"], message: `Continuation state references unknown input '${id}'.` });
+          context.addIssue({
+            code: "custom",
+            path: ["continuationState"],
+            message: `Continuation state references unknown input '${id}'.`,
+          });
       }
     }
-  },
-);
+  });
 
 export type InformationEnvelopeV1 = z.infer<typeof informationEnvelopeV1Schema>;
 
@@ -259,12 +309,20 @@ export const groundedCompositionPlacementSchema = z
 export const groundedCompositionPlanSchema = z
   .object({
     version: z.literal("1.0"),
-    topology: z.enum(["editorial-stack", "responsive-grid", "focal-split", "horizontal-rail", "timeline-spine"]),
+    topology: z.enum([
+      "editorial-stack",
+      "responsive-grid",
+      "focal-split",
+      "horizontal-rail",
+      "timeline-spine",
+    ]),
     placements: z.array(groundedCompositionPlacementSchema).min(1).max(8),
   })
   .strict();
 
-export type GroundedCompositionPlan = z.infer<typeof groundedCompositionPlanSchema>;
+export type GroundedCompositionPlan = z.infer<
+  typeof groundedCompositionPlanSchema
+>;
 
 const collectionComponents = new Set([
   "FactList",
@@ -297,7 +355,34 @@ function groundedProgress(value: string) {
   const match = value.trim().match(/^(100(?:\.0+)?|\d{1,2}(?:\.\d+)?)\s*%?$/);
   if (!match) return null;
   const parsed = Number(match[1]);
-  return Number.isFinite(parsed) && parsed >= 0 && parsed <= 100 ? parsed : null;
+  return Number.isFinite(parsed) && parsed >= 0 && parsed <= 100
+    ? parsed
+    : null;
+}
+
+function isExecutiveBriefingRequest(value: string) {
+  return /\b(?:executive|leadership|board|decision)\s+brief(?:ing)?\b/i.test(
+    value,
+  );
+}
+
+function executiveBriefingRole(
+  section: InformationEnvelopeV1["sections"][number],
+  index: number,
+) {
+  if (index === 0) return "headline" as const;
+  const text = `${section.title} ${section.body}`.toLowerCase();
+  if (/\b(signal|status|snapshot|outlook|metric|health)\b/.test(text))
+    return "status" as const;
+  if (/\b(actions?|next steps?|owner|commitment|follow-up)\b/.test(text))
+    return "actions" as const;
+  if (/\b(decision|recommend|approval|approve)\b/.test(text))
+    return "decisions" as const;
+  if (/\b(risk|watch|caveat|exposure|constraint)\b/.test(text))
+    return "alerts" as const;
+  if (/\b(chang(?:e|ed|es|ing)|findings?|developments?|evidence)\b/.test(text))
+    return "findings" as const;
+  return "context" as const;
 }
 
 export function parseGroundedCompositionPlan(
@@ -306,51 +391,142 @@ export function parseGroundedCompositionPlan(
 ): GroundedCompositionPlan {
   const envelope = informationEnvelopeV1Schema.parse(envelopeInput);
   const plan = groundedCompositionPlanSchema.parse(planInput);
-  const sections = new Map(envelope.sections.map((section) => [section.id, section]));
+  const sections = new Map(
+    envelope.sections.map((section) => [section.id, section]),
+  );
   const seenSections = new Set<string>();
   for (const placement of plan.placements) {
     const section = sections.get(placement.sectionId);
-    if (!section) throw new Error(`Grounded composition references unknown section '${placement.sectionId}'.`);
-    if (seenSections.has(placement.sectionId)) throw new Error(`Grounded composition repeats section '${placement.sectionId}'.`);
+    if (!section)
+      throw new Error(
+        `Grounded composition references unknown section '${placement.sectionId}'.`,
+      );
+    if (seenSections.has(placement.sectionId))
+      throw new Error(
+        `Grounded composition repeats section '${placement.sectionId}'.`,
+      );
     seenSections.add(placement.sectionId);
     const expected = new Set(section.items.map((item) => item.id));
     const actual = new Set(placement.itemIds);
-    if (actual.size !== placement.itemIds.length) throw new Error(`Grounded composition repeats an item in section '${section.id}'.`);
-    if (expected.size !== actual.size || [...expected].some((id) => !actual.has(id)))
-      throw new Error(`Grounded composition must reference every item in section '${section.id}' exactly once.`);
+    if (actual.size !== placement.itemIds.length)
+      throw new Error(
+        `Grounded composition repeats an item in section '${section.id}'.`,
+      );
+    if (
+      expected.size !== actual.size ||
+      [...expected].some((id) => !actual.has(id))
+    )
+      throw new Error(
+        `Grounded composition must reference every item in section '${section.id}' exactly once.`,
+      );
     if (placement.component === "Input" && section.items.length !== 1)
       throw new Error(`Input requires exactly one grounded item.`);
-    if (section.items.length < 2 && collectionComponents.has(placement.component))
-      throw new Error(`${placement.component} requires at least two grounded items.`);
-    if (section.items.length > 1 && singleItemComponents.has(placement.component))
-      throw new Error(`${placement.component} supports at most one grounded item.`);
-    if (placement.component === "ColorPalette" && section.items.some((item) => !/^#(?:[0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(item.value.trim())))
-      throw new Error(`ColorPalette requires hexadecimal grounded item values.`);
-    if (placement.component === "Chart" && section.items.some((item) => groundedProgress(item.value) === null))
-      throw new Error(`Chart requires numeric grounded item values between 0 and 100.`);
-    if (["Donut", "Progress"].includes(placement.component) && groundedProgress(section.items[0]?.value ?? "") === null)
-      throw new Error(`${placement.component} requires one numeric grounded value between 0 and 100.`);
+    if (
+      section.items.length < 2 &&
+      collectionComponents.has(placement.component)
+    )
+      throw new Error(
+        `${placement.component} requires at least two grounded items.`,
+      );
+    if (
+      section.items.length > 1 &&
+      singleItemComponents.has(placement.component)
+    )
+      throw new Error(
+        `${placement.component} supports at most one grounded item.`,
+      );
+    if (
+      placement.component === "ColorPalette" &&
+      section.items.some(
+        (item) =>
+          !/^#(?:[0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(
+            item.value.trim(),
+          ),
+      )
+    )
+      throw new Error(
+        `ColorPalette requires hexadecimal grounded item values.`,
+      );
+    if (
+      placement.component === "Chart" &&
+      section.items.some((item) => groundedProgress(item.value) === null)
+    )
+      throw new Error(
+        `Chart requires numeric grounded item values between 0 and 100.`,
+      );
+    if (
+      ["Donut", "Progress"].includes(placement.component) &&
+      groundedProgress(section.items[0]?.value ?? "") === null
+    )
+      throw new Error(
+        `${placement.component} requires one numeric grounded value between 0 and 100.`,
+      );
   }
-  if (seenSections.size !== sections.size) throw new Error("Grounded composition must place every section exactly once.");
-  if (plan.placements.filter((placement) => placement.importance === "primary").length !== 1)
-    throw new Error("Grounded composition requires exactly one primary placement.");
+  if (seenSections.size !== sections.size)
+    throw new Error(
+      "Grounded composition must place every section exactly once.",
+    );
+  if (
+    plan.placements.filter((placement) => placement.importance === "primary")
+      .length !== 1
+  )
+    throw new Error(
+      "Grounded composition requires exactly one primary placement.",
+    );
   return plan;
 }
 
-function defaultComponent(envelope: InformationEnvelopeV1, section: InformationEnvelopeV1["sections"][number]) {
+function defaultComponent(
+  envelope: InformationEnvelopeV1,
+  section: InformationEnvelopeV1["sections"][number],
+  index: number,
+) {
   const text = `${envelope.originalRequest} ${section.title}`.toLowerCase();
-  if (section.items.length === 1 && /\b(input|enter|field|editable)\b/.test(text)) return "Input";
-  if (section.items.length <= 1 && /\b(code|snippet|schema|query)\b/.test(text)) return "CodeBlock";
-  if (section.items.length <= 1 && /\b(quote|testimonial)\b/.test(text)) return "Quote";
-  if (section.items.length === 1 && /\b(progress|completion|readiness)\b/.test(text) && groundedProgress(section.items[0]!.value) !== null) return "Progress";
-  if (section.items.length === 1 && /\b(metric|kpi|score|rate)\b/.test(text)) return "Metric";
+  if (isExecutiveBriefingRequest(envelope.originalRequest)) {
+    if (index === 0 && section.items.length <= 1) return "Hero";
+    if (
+      /\b(actions?|next steps?|owner|commitment|follow-up)\b/.test(text) &&
+      section.items.length >= 2
+    )
+      return "Steps";
+    if (section.items.length >= 2) return "FactList";
+    return section.body ? "Text" : "Callout";
+  }
+  if (
+    section.items.length === 1 &&
+    /\b(input|enter|field|editable)\b/.test(text)
+  )
+    return "Input";
+  if (section.items.length <= 1 && /\b(code|snippet|schema|query)\b/.test(text))
+    return "CodeBlock";
+  if (section.items.length <= 1 && /\b(quote|testimonial)\b/.test(text))
+    return "Quote";
+  if (
+    section.items.length === 1 &&
+    /\b(progress|completion|readiness)\b/.test(text) &&
+    groundedProgress(section.items[0]!.value) !== null
+  )
+    return "Progress";
+  if (section.items.length === 1 && /\b(metric|kpi|score|rate)\b/.test(text))
+    return "Metric";
   if (section.items.length < 2) return section.body ? "Text" : "Callout";
-  if (/\b(colors?|palette|swatches?)\b/.test(text) && section.items.every((item) => /^#(?:[0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(item.value.trim()))) return "ColorPalette";
-  if (/\b(chart|trend|distribution)\b/.test(text) && section.items.every((item) => groundedProgress(item.value) !== null)) return "Chart";
+  if (
+    /\b(colors?|palette|swatches?)\b/.test(text) &&
+    section.items.every((item) =>
+      /^#(?:[0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(item.value.trim()),
+    )
+  )
+    return "ColorPalette";
+  if (
+    /\b(chart|trend|distribution)\b/.test(text) &&
+    section.items.every((item) => groundedProgress(item.value) !== null)
+  )
+    return "Chart";
   if (/\b(map|locations?|places?|route)\b/.test(text)) return "MapPanel";
   if (/\b(calendar|schedule|agenda)\b/.test(text)) return "Calendar";
   if (/compar|versus|\bvs\b|trade-?off/.test(text)) return "Comparison";
-  if (/decision tool|choose|select|pick one|preference/.test(text)) return "ChoiceGroup";
+  if (/decision tool|choose|select|pick one|preference/.test(text))
+    return "ChoiceGroup";
   if (/tabs?|categories|views?/.test(text)) return "Tabs";
   if (/checklist|to-?do|tasks?|track/.test(text)) return "Checklist";
   if (/timeline|history|chronolog|milestone/.test(text)) return "Timeline";
@@ -360,29 +536,37 @@ function defaultComponent(envelope: InformationEnvelopeV1, section: InformationE
 }
 
 /** Trusted, deterministic fallback. It never claims to be model-authored. */
-export function createDefaultGroundedCompositionPlan(envelopeInput: InformationEnvelopeV1): GroundedCompositionPlan {
+export function createDefaultGroundedCompositionPlan(
+  envelopeInput: InformationEnvelopeV1,
+): GroundedCompositionPlan {
   const envelope = informationEnvelopeV1Schema.parse(envelopeInput);
-  const hasIdentityMedia = (envelope.media ?? []).some((item) => item.role === "identity");
+  const hasIdentityMedia = (envelope.media ?? []).some(
+    (item) => item.role === "identity",
+  );
   const topology = hasIdentityMedia
     ? "focal-split"
-    : /compar|versus|\bvs\b/.test(envelope.originalRequest.toLowerCase())
-    ? "responsive-grid"
-    : /timeline|chronolog/.test(envelope.originalRequest.toLowerCase())
-      ? "timeline-spine"
-      : "editorial-stack";
+    : isExecutiveBriefingRequest(envelope.originalRequest)
+      ? "responsive-grid"
+      : /compar|versus|\bvs\b/.test(envelope.originalRequest.toLowerCase())
+        ? "responsive-grid"
+        : /timeline|chronolog/.test(envelope.originalRequest.toLowerCase())
+          ? "timeline-spine"
+          : "editorial-stack";
   return parseGroundedCompositionPlan(envelope, {
     version: "1.0",
     topology,
     placements: envelope.sections.map((section, index) => ({
       sectionId: section.id,
-      component: defaultComponent(envelope, section),
+      component: defaultComponent(envelope, section, index),
       itemIds: section.items.map((item) => item.id),
       importance: index === 0 ? "primary" : "supporting",
     })),
   });
 }
 
-function shapeForComponent(component: GroundedCompositionPlan["placements"][number]["component"]): InformationShape {
+function shapeForComponent(
+  component: GroundedCompositionPlan["placements"][number]["component"],
+): InformationShape {
   return {
     Hero: "narrative",
     Card: "hierarchy",
@@ -416,10 +600,15 @@ function placementIsSelectable(
   placement: GroundedCompositionPlan["placements"][number],
 ) {
   if (["ChoiceGroup", "Tabs"].includes(placement.component)) return true;
-  return placement.component === "Comparison" && /\b(choose|select|decide|decision|pick)\b/i.test(envelope.originalRequest);
+  return (
+    placement.component === "Comparison" &&
+    /\b(choose|select|decide|decision|pick)\b/i.test(envelope.originalRequest)
+  );
 }
 
-function makeNode(input: Partial<UINode> & Pick<UINode, "id" | "type">): UINode {
+function makeNode(
+  input: Partial<UINode> & Pick<UINode, "id" | "type">,
+): UINode {
   return uiNodeSchema.parse({
     slot: "",
     importance: "supporting",
@@ -445,40 +634,84 @@ function makeNode(input: Partial<UINode> & Pick<UINode, "id" | "type">): UINode 
   });
 }
 
-function createRepresentation(envelope: InformationEnvelopeV1, plan: GroundedCompositionPlan): RepresentationPlan {
+/**
+ * Envelope IDs identify grounded facts and intentionally allow separators such
+ * as `_`, `.`, and `:`. Representation slots are a separate internal namespace
+ * with a stricter hyphen-only contract, so never copy envelope IDs into it.
+ */
+function groundedSectionSlotId(index: number) {
+  return `section-${index + 1}`;
+}
+
+function createRepresentation(
+  envelope: InformationEnvelopeV1,
+  plan: GroundedCompositionPlan,
+): RepresentationPlan {
   const media = envelope.media ?? [];
   const hasIdentityMedia = media.some((item) => item.role === "identity");
+  const isExecutiveBriefing =
+    !hasIdentityMedia && isExecutiveBriefingRequest(envelope.originalRequest);
   return representationPlanSchema.parse({
     version: "1.0",
-    mode: hasIdentityMedia ? "blueprint" : "open",
-    blueprintIds: [hasIdentityMedia ? "profile-reference" : "open-composition"],
+    mode: hasIdentityMedia || isExecutiveBriefing ? "blueprint" : "open",
+    blueprintIds: [
+      hasIdentityMedia
+        ? "profile-reference"
+        : isExecutiveBriefing
+          ? "briefing"
+          : "open-composition",
+    ],
     confidence: 1,
     userJob: envelope.originalRequest.slice(0, 160),
     informationShapes: [
       ...new Set([
-        ...plan.placements.map((placement) => shapeForComponent(placement.component)),
+        ...plan.placements.map((placement) =>
+          shapeForComponent(placement.component),
+        ),
         ...(media.length ? ["media-artifact" as const] : []),
       ]),
     ],
-    interactionLevel: plan.placements.some((placement) => ["Checklist", "Input"].includes(placement.component))
+    interactionLevel: plan.placements.some((placement) =>
+      ["Checklist", "Input"].includes(placement.component),
+    )
       ? "edit"
-      : plan.placements.some((placement) => placementIsSelectable(envelope, placement))
+      : plan.placements.some((placement) =>
+            placementIsSelectable(envelope, placement),
+          )
         ? "select"
         : "read",
-    scale: envelope.sections.length <= 2 ? "compact" : envelope.sections.length <= 5 ? "compound" : "workflow",
+    scale:
+      envelope.sections.length <= 2
+        ? "compact"
+        : envelope.sections.length <= 5
+          ? "compound"
+          : "workflow",
     topology: plan.topology,
-    noveltyBudget: 0.5,
+    noveltyBudget: isExecutiveBriefing ? 0.35 : 0.5,
     slots: [
       ...media.map((item, index) => ({
         id: `media-${index + 1}`,
-        role: item.role === "identity" ? "identity" : item.role === "evidence" ? "evidence" : "featured",
+        role:
+          item.role === "identity"
+            ? "identity"
+            : item.role === "evidence"
+              ? "evidence"
+              : "featured",
         shape: "media-artifact" as const,
         priority: "supporting" as const,
         required: false,
       })),
       ...plan.placements.map((placement, index) => ({
-        id: placement.sectionId,
-        role: index === 0 ? "primary" : index === 1 ? "context" : index === 2 ? "evidence" : "exploration",
+        id: groundedSectionSlotId(index),
+        role: isExecutiveBriefing
+          ? executiveBriefingRole(envelope.sections[index]!, index)
+          : index === 0
+            ? "primary"
+            : index === 1
+              ? "context"
+              : index === 2
+                ? "evidence"
+                : "exploration",
         shape: shapeForComponent(placement.component),
         priority: placement.importance,
         required: placement.importance === "primary",
@@ -502,7 +735,9 @@ export function compileGroundedInformationUI(
   const envelope = informationEnvelopeV1Schema.parse(envelopeInput);
   const composition = parseGroundedCompositionPlan(envelope, planInput);
   const representation = createRepresentation(envelope, composition);
-  const sectionMap = new Map(envelope.sections.map((section) => [section.id, section]));
+  const sectionMap = new Map(
+    envelope.sections.map((section) => [section.id, section]),
+  );
   const mediaNodes = (envelope.media ?? []).map((media, index) =>
     makeNode({
       id: `media-${media.id}`,
@@ -519,33 +754,49 @@ export function compileGroundedInformationUI(
       meta: media.sourceId,
     }),
   );
-  const contentNodes = composition.placements.map((placement) => {
+  const contentNodes = composition.placements.map((placement, index) => {
     const section = sectionMap.get(placement.sectionId)!;
     const itemMap = new Map(section.items.map((item) => [item.id, item]));
-    const inputItem = placement.component === "Input" ? itemMap.get(placement.itemIds[0]!) : undefined;
-    const singleItem = singleItemComponents.has(placement.component) ? itemMap.get(placement.itemIds[0]!) : undefined;
-    const isProgressSurface = placement.component === "Donut" || placement.component === "Progress";
+    const inputItem =
+      placement.component === "Input"
+        ? itemMap.get(placement.itemIds[0]!)
+        : undefined;
+    const singleItem = singleItemComponents.has(placement.component)
+      ? itemMap.get(placement.itemIds[0]!)
+      : undefined;
+    const isProgressSurface =
+      placement.component === "Donut" || placement.component === "Progress";
     const copyDetail = singleItem?.detail ?? "";
     return makeNode({
       id: `section-${section.id}`,
       type: placement.component,
-      slot: section.id,
+      slot: groundedSectionSlotId(index),
       importance: placement.importance,
       relationship: "grouped",
       title: section.title,
       text: inputItem
-        ? [section.body, inputItem.detail].filter(Boolean).join(" ").slice(0, 500)
+        ? [section.body, inputItem.detail]
+            .filter(Boolean)
+            .join(" ")
+            .slice(0, 500)
         : [section.body, copyDetail].filter(Boolean).join(" ").slice(0, 500),
       label: singleItem?.label.slice(0, 80) ?? "",
-      value: singleItem?.value.slice(0, 120) ?? (section.body.length > 500 ? section.body : ""),
-      meta: [singleItem?.sourceIds.join(","), section.sourceIds.join(",")].filter(Boolean).join(",").slice(0, 100),
-      progress: isProgressSurface ? groundedProgress(singleItem?.value ?? "") : null,
+      value:
+        singleItem?.value.slice(0, 120) ??
+        (section.body.length > 500 ? section.body : ""),
+      meta: [singleItem?.sourceIds.join(","), section.sourceIds.join(",")]
+        .filter(Boolean)
+        .join(",")
+        .slice(0, 100),
+      progress: isProgressSurface
+        ? groundedProgress(singleItem?.value ?? "")
+        : null,
       action:
         placement.component === "Checklist"
           ? { type: "toggle", prompt: "", targetId: section.id, value: "" }
           : placementIsSelectable(envelope, placement)
             ? { type: "select", prompt: "", targetId: section.id, value: "" }
-          : { type: "none", prompt: "", targetId: "", value: "" },
+            : { type: "none", prompt: "", targetId: "", value: "" },
       items: placement.itemIds.map((id) => {
         const item = itemMap.get(id)!;
         return {
@@ -554,31 +805,47 @@ export function compileGroundedInformationUI(
           value: item.value.slice(0, 120),
           detail: item.detail,
           tone: "neutral" as const,
-          progress: placement.component === "Chart" ? groundedProgress(item.value) : null,
+          progress:
+            placement.component === "Chart"
+              ? groundedProgress(item.value)
+              : null,
         };
       }),
     });
   });
   const continuationPlacement = composition.placements.find(
-    (placement) => placement.component === "Input" || placementIsSelectable(envelope, placement),
+    (placement) =>
+      placement.component === "Input" ||
+      placementIsSelectable(envelope, placement),
   );
+  const continuationPlacementIndex = continuationPlacement
+    ? composition.placements.indexOf(continuationPlacement)
+    : -1;
   const continuationNode = continuationPlacement
     ? makeNode({
         id: "continue-with-state",
         type: "Button",
-        slot: continuationPlacement.sectionId,
+        slot: groundedSectionSlotId(continuationPlacementIndex),
         importance: "supporting",
         relationship: "continuation",
         label: "Continue with this view",
         action: {
           type: "prompt",
-          prompt: envelope.suggestedRefinements[0] ?? "Refine this view using my current selections and inputs.",
+          prompt:
+            envelope.suggestedRefinements[0] ??
+            "Refine this view using my current selections and inputs.",
           targetId: continuationPlacement.sectionId,
           value: "",
         },
       })
     : null;
-  const layoutType = composition.topology === "horizontal-rail" ? "Rail" : composition.topology === "responsive-grid" || composition.topology === "focal-split" ? "Grid" : "Stack";
+  const layoutType =
+    composition.topology === "horizontal-rail"
+      ? "Rail"
+      : composition.topology === "responsive-grid" ||
+          composition.topology === "focal-split"
+        ? "Grid"
+        : "Stack";
   const layout = makeNode({
     id: "grounded-layout",
     type: layoutType,
@@ -595,35 +862,65 @@ export function compileGroundedInformationUI(
     responseId,
     goal: envelope.originalRequest.slice(0, 160),
     representation,
-    screen: { title: envelope.sections[0]!.title.slice(0, 72), contextLabel: "Interactive answer" },
-    nodes: [root, layout, ...mediaNodes, ...contentNodes, ...(continuationNode ? [continuationNode] : [])],
+    screen: {
+      title: envelope.sections[0]!.title.slice(0, 72),
+      contextLabel: isExecutiveBriefingRequest(envelope.originalRequest)
+        ? "Executive briefing"
+        : "Interactive answer",
+    },
+    nodes: [
+      root,
+      layout,
+      ...mediaNodes,
+      ...contentNodes,
+      ...(continuationNode ? [continuationNode] : []),
+    ],
     suggestions: envelope.suggestedRefinements,
   });
   return { experience, envelope, composition };
 }
 
-export function formatInformationEnvelopeFallback(envelopeInput: InformationEnvelopeV1) {
+export function formatInformationEnvelopeFallback(
+  envelopeInput: InformationEnvelopeV1,
+) {
   const envelope = informationEnvelopeV1Schema.parse(envelopeInput);
   if (!envelope.sources.length) return envelope.groundedAnswer;
-  const sources = envelope.sources.map((source) => `- ${source.title}: ${source.url}`).join("\n");
+  const sources = envelope.sources
+    .map((source) => `- ${source.title}: ${source.url}`)
+    .join("\n");
   return `${envelope.groundedAnswer}\n\nSources\n${sources}`;
 }
 
-export function buildGroundedCompositionInstructions(envelopeInput: InformationEnvelopeV1) {
+export function buildGroundedCompositionInstructions(
+  envelopeInput: InformationEnvelopeV1,
+) {
   const envelope = informationEnvelopeV1Schema.parse(envelopeInput);
   return `You are the Fify grounded composition stage. Choose only topology, component type, order, and importance.\nNever write, rewrite, infer, summarize, or add factual copy, links, dates, prices, or citations.\nReference every section and every item exactly once using these IDs:\n${envelope.sections.map((section) => `- ${section.id}: ${section.items.map((item) => item.id).join(", ") || "no items"}`).join("\n")}\nUse Text or Callout for sections with fewer than two items unless a single-value semantic surface fits.\nUse ColorPalette only for hexadecimal values; Chart, Donut, and Progress only for explicit numeric values from 0 to 100.\nMapPanel, Calendar, Chart, ColorPalette, and other collection surfaces require at least two items. Never choose a component that would hide a referenced item.`;
 }
 
-export function buildGroundedCompositionJsonSchema(envelopeInput: InformationEnvelopeV1): Record<string, unknown> {
+export function buildGroundedCompositionJsonSchema(
+  envelopeInput: InformationEnvelopeV1,
+): Record<string, unknown> {
   const envelope = informationEnvelopeV1Schema.parse(envelopeInput);
   const sectionIds = envelope.sections.map((section) => section.id);
-  const itemIds = envelope.sections.flatMap((section) => section.items.map((item) => item.id));
+  const itemIds = envelope.sections.flatMap((section) =>
+    section.items.map((item) => item.id),
+  );
   return {
     type: "object",
     additionalProperties: false,
     properties: {
       version: { type: "string", const: "1.0" },
-      topology: { type: "string", enum: ["editorial-stack", "responsive-grid", "focal-split", "horizontal-rail", "timeline-spine"] },
+      topology: {
+        type: "string",
+        enum: [
+          "editorial-stack",
+          "responsive-grid",
+          "focal-split",
+          "horizontal-rail",
+          "timeline-spine",
+        ],
+      },
       placements: {
         type: "array",
         minItems: envelope.sections.length,
@@ -634,8 +931,15 @@ export function buildGroundedCompositionJsonSchema(envelopeInput: InformationEnv
           properties: {
             sectionId: { type: "string", enum: sectionIds },
             component: { type: "string", enum: [...groundedComponentTypes] },
-            itemIds: { type: "array", items: { type: "string", enum: itemIds }, maxItems: 12 },
-            importance: { type: "string", enum: ["primary", "supporting", "quiet"] },
+            itemIds: {
+              type: "array",
+              items: { type: "string", enum: itemIds },
+              maxItems: 12,
+            },
+            importance: {
+              type: "string",
+              enum: ["primary", "supporting", "quiet"],
+            },
           },
           required: ["sectionId", "component", "itemIds", "importance"],
         },

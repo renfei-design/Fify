@@ -1,0 +1,7 @@
+interface:
+  display_name: "Fify Information UI"
+  short_description: "Render an answer as an interactive Fify view."
+  default_prompt: "Use $information-ui to render this answer as an interactive Fify view."
+
+policy:
+  allow_implicit_invocation: false

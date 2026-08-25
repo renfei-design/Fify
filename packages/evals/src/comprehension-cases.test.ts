@@ -4,7 +4,7 @@ import type { ComprehensionBenchmarkCase } from "./comprehension.js";
 
 describe("comprehension benchmark v1 cases", () => {
   it("covers distinct user jobs with internally valid scoring requirements", () => {
-    expect(comprehensionBenchmarkCasesV1).toHaveLength(8);
+    expect(comprehensionBenchmarkCasesV1).toHaveLength(9);
     const ids = comprehensionBenchmarkCasesV1.map(({ id }) => id);
     expect(new Set(ids).size).toBe(ids.length);
     expect(

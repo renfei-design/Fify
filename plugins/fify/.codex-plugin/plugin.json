@@ -1,6 +1,6 @@
 {
   "name": "fify",
-  "version": "0.1.0+codex.20260824142948",
+  "version": "0.1.0+codex.20260825074946",
   "description": "Turn grounded AI answers into trusted interactive information views.",
   "author": {
     "name": "Fify Contributors"
@@ -12,13 +12,14 @@
     "comparison",
     "checklist",
     "timeline",
+    "executive briefing",
     "decision support"
   ],
   "skills": "./skills/",
   "interface": {
     "displayName": "Fify",
     "shortDescription": "Turn complex answers into interactive views.",
-    "longDescription": "Ask normally or tag @Fify. Turn grounded answers into catalog-constrained comparisons, plans, checklists, timelines, decision tools, and editable summaries while preserving the complete ordinary answer as an authoritative fallback. No end-user API key, Fify account, or schema knowledge is required.",
+    "longDescription": "Tag @Fify or explicitly request an interactive view to turn grounded answers into catalog-constrained comparisons, executive briefings, plans, checklists, timelines, decision tools, and editable summaries while preserving the complete ordinary answer as an authoritative fallback. Fify never activates for an ordinary untagged request. No end-user API key, Fify account, or schema knowledge is required.",
     "developerName": "Fify Contributors",
     "category": "Productivity",
     "capabilities": [
@@ -38,7 +39,7 @@
     ],
     "defaultPrompt": [
       "Turn this answer into an interactive comparison I can filter.",
-      "Make this rollout plan a checklist I can work through.",
+      "Turn these operating results into an executive briefing for leadership.",
       "Show these milestones as a timeline with risks and next steps."
     ]
   },

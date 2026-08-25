@@ -7,18 +7,21 @@
     "challengeBaseUrl": "https://fify-chatgpt.renfei1992.chatgpt.site",
     "csp": {
       "connectDomains": [],
-      "resourceDomains": ["https://upload.wikimedia.org", "https://api.openverse.org"]
+      "resourceDomains": [
+        "https://upload.wikimedia.org",
+        "https://api.openverse.org"
+      ]
     }
   },
   "listing": {
     "name": "Fify",
     "category": "Productivity",
-    "shortDescription": "Turn complex answers into interactive comparisons, plans, checklists, timelines, and decision views.",
+    "shortDescription": "Turn complex answers into interactive comparisons, executive briefings, plans, checklists, timelines, and decision views.",
     "websiteUrl": "https://fify-chatgpt.renfei1992.chatgpt.site",
     "supportUrl": "https://fify-chatgpt.renfei1992.chatgpt.site/support",
     "privacyPolicyUrl": "https://fify-chatgpt.renfei1992.chatgpt.site/privacy",
     "termsUrl": "https://fify-chatgpt.renfei1992.chatgpt.site/terms"
   },
   "availability": "global_where_supported",
-  "releaseNotes": "Initial Fify submission. Fify turns grounded ChatGPT answers into catalog-constrained interactive comparisons, plans, checklists, timelines, and decision views. It requires no authentication or test credentials, performs no consequential actions, and always preserves the complete plain answer as fallback."
+  "releaseNotes": "Fify turns grounded ChatGPT answers into catalog-constrained interactive comparisons, executive briefings, plans, checklists, timelines, and decision views. The executive-briefing blueprint presents an answer-first headline, signals, decisions, risks, and owned actions without decorative dashboard chrome. Fify requires no authentication or test credentials, performs no consequential actions, and always preserves the complete plain answer as fallback."
 }

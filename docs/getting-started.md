@@ -16,16 +16,17 @@ pnpm codex:install
 
 This path requires Node.js 22+, pnpm 11+, and a Codex installation that supports plugin commands.
 
-Then start a new Codex task. Ask normally when an interactive view would help, or tag `@Fify` explicitly.
+Then start a new Codex task. Tag `@Fify` or explicitly ask for an interactive view. Fify is mention-only, so ordinary untagged requests remain standard Codex answers.
 
-Codex supplies the grounded answer, so the local plugin works without an end-user API key. Its bundled MCP server uses the trusted deterministic composer when no optional service credential is present. Users do not need a Fify account, an envelope schema, or renderer configuration.
+Codex supplies the grounded answer, so the local plugin works without an end-user API key. Its bundled MCP server uses the trusted deterministic composer when no optional service credential is present. Named real-person profiles perform a bounded Wikimedia lookup for an openly licensed, attributed portrait unless the user requests no image. Users do not need a Fify account, an envelope schema, or renderer configuration.
 
 Good first prompts:
 
-- Compare these options by cost, effort, and risk.
-- Turn this launch plan into an editable checklist.
-- Show the milestones as a timeline.
-- Make this summary easier to explore.
+- `@Fify` compare these options by cost, effort, and risk.
+- Use Fify to turn this launch plan into an editable checklist.
+- Show the milestones as an interactive timeline.
+- Make this summary an interactive view that is easier to explore.
+- Turn these operating results into an executive briefing with signals, a decision, risks, and next actions.
 
 ### Maintainer bundle only
 

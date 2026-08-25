@@ -142,17 +142,17 @@ pnpm install
 pnpm codex:install
 ```
 
-Start a new Codex task after installation. Ask normally when an interactive view would help, or tag `@Fify` explicitly.
+Start a new Codex task after installation. Tag `@Fify` or explicitly ask for an interactive view; ordinary untagged requests remain standard Codex answers.
 
-The local plugin works without an end-user provider key because Codex supplies the grounded answer and the bundled server has a trusted deterministic composer. A service operator may optionally configure a provider key for model-selected composition.
+The local plugin works without an end-user provider key because Codex supplies the grounded answer and the bundled server has a trusted deterministic composer. Named real-person profiles resolve an attributed portrait through a bounded Wikimedia lookup unless the user requests no image. A service operator may optionally configure a provider key for model-selected composition.
 
 Good prompts to try:
 
-- Compare these options by cost, effort, and risk.
-- Turn this launch plan into a checklist I can work through.
-- Show the milestones as a timeline with dependencies.
-- Make this research summary easier to scan and explore.
-- Help me choose by separating evidence, assumptions, and tradeoffs.
+- `@Fify` compare these options by cost, effort, and risk.
+- Use Fify to turn this launch plan into a checklist I can work through.
+- Show the milestones as an interactive timeline with dependencies.
+- Make this research summary an interactive view I can scan and explore.
+- Use Fify to help me choose by separating evidence, assumptions, and tradeoffs.
 
 ## Use Fify in an application
 

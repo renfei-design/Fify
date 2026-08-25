@@ -11,11 +11,13 @@
     "./http": "./dist/http.js"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json && esbuild src/plugin-entry.ts --bundle --platform=node --format=esm --target=node22 --outfile=dist/plugin-server.mjs --sourcemap",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run src",
-    "start": "node dist/server.js",
+    "start": "node dist/plugin-entry.js",
     "preview": "node scripts/preview.mjs",
+    "preview:comparison": "node scripts/comparison-preview.mjs",
+    "preview:briefing": "node scripts/briefing-preview.mjs",
     "preview:interactions": "node scripts/interaction-preview.mjs",
     "preview:catalog": "node scripts/catalog-preview.mjs"
   },
@@ -24,5 +26,8 @@
     "@fify/core": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.30.0",
     "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
   }
 }

@@ -10,7 +10,7 @@ Provider-independent evaluation for Fify applications.
   from browser-evidenced release results and applies hard eligibility gates.
   Browser captures include axe, runtime, network, viewport, screenshot, and
   live-control evidence.
-- `comprehensionBenchmarkCasesV1` provides eight fixed-source, cross-domain
+- `comprehensionBenchmarkCasesV1` provides nine fixed-source, cross-domain
   benchmark cases.
 
 The comprehension layer intentionally avoids expecting particular UI

@@ -1839,7 +1839,7 @@ export function UniversalDemo() {
                 <article>
                   <strong>Codex integration</strong>
                   <span>
-                    Install Fify once, then ask normally or tag @Fify.
+                    Install Fify once, then tag @Fify or explicitly ask for an interactive view.
                   </span>
                 </article>
               </div>

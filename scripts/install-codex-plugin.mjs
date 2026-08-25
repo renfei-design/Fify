@@ -1,4 +1,4 @@
-import { rm } from "node:fs/promises";
+import { copyFile, mkdir, rm } from "node:fs/promises";
 import path from "node:path";
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
@@ -9,6 +9,14 @@ const projectRoot = path.resolve(
 );
 const pluginRoot = path.join(projectRoot, "plugins", "fify");
 const serverRoot = path.join(pluginRoot, "server");
+const bundledServer = path.join(
+  projectRoot,
+  "apps",
+  "mcp-app",
+  "dist",
+  "plugin-server.mjs",
+);
+const installedServer = path.join(serverRoot, "dist", "server.mjs");
 const dryRun = process.argv.includes("--dry-run");
 const bundleOnly = process.argv.includes("--bundle-only");
 
@@ -72,15 +80,19 @@ async function marketplaceIsConfigured() {
 
 console.log("Preparing the portable Fify Codex plugin…");
 await run("corepack", ["pnpm", "plugin:build"]);
-if (!dryRun) await rm(serverRoot, { recursive: true, force: true });
+if (!dryRun) {
+  await rm(serverRoot, { recursive: true, force: true });
+  await mkdir(path.dirname(installedServer), { recursive: true });
+  await copyFile(bundledServer, installedServer);
+}
 await run("corepack", [
   "pnpm",
-  "--config.inject-workspace-packages=true",
   "--filter",
   "@fify/mcp-app",
-  "deploy",
-  "--prod",
-  serverRoot,
+  "exec",
+  "node",
+  "scripts/smoke-plugin-bundle.mjs",
+  pluginRoot,
 ]);
 await run("node", ["scripts/validate-codex-plugin.mjs", "--require-bundle"]);
 
@@ -90,7 +102,7 @@ if (!bundleOnly) {
   else await run("codex", ["plugin", "marketplace", "add", projectRoot]);
   await run("codex", ["plugin", "add", "fify@personal"]);
   console.log(
-    "\nFify is installed. Start a new Codex task, then ask normally or tag @Fify.",
+    "\nFify is installed. Start a new Codex task, then tag @Fify or explicitly request an interactive view.",
   );
 } else {
   console.log("\nPortable plugin bundle is ready in plugins/fify/server.");
