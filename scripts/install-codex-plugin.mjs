@@ -84,13 +84,14 @@ async function marketplaceIsConfigured() {
 }
 
 async function assertDesktopIsStoppedBeforeInstall() {
-  if (bundleOnly || allowRunningHost || process.platform !== "darwin") return;
+  if (bundleOnly || allowRunningHost) return;
   if (dryRun) {
     console.log(
       "\n> Refuse installation if the ChatGPT/Codex desktop MCP host is running.",
     );
     return;
   }
+  if (process.platform !== "darwin") return;
   const { stdout } = await execute("ps", ["-axo", "lstart=,command="]);
   if (parseDesktopAppServerStart(stdout) == null) return;
   throw new Error(
