@@ -1,0 +1,50 @@
+{
+  "version": "1.0",
+  "id": "monitor-track",
+  "name": "Monitor and track",
+  "reviewedAt": "2026-08-27",
+  "contract": {
+    "userJob": "See what changed, whether a threshold was crossed, and what needs attention next.",
+    "triggers": ["monitor", "track progress", "status update"],
+    "exclusions": ["one-time analysis", "generic dashboard request"],
+    "roles": ["status", "change", "threshold", "alert", "next-action"],
+    "layout": {
+      "wide": "Prioritize change and alerts before supporting metrics and history.",
+      "compact": "Stack alerts, change, status, and next actions before optional history.",
+      "minimumItems": 1,
+      "maximumItems": 12
+    },
+    "interactions": ["filter", "disclosure", "follow-up-refinement"],
+    "fallback": "Preserve status, change, thresholds, alerts, actions, time context, and sources."
+  },
+  "implementation": {
+    "blueprints": ["monitor-track"],
+    "components": ["Metric", "Chart", "Progress", "Timeline", "Checklist"]
+  },
+  "quality": {
+    "stage": "baseline",
+    "priority": "P2",
+    "scores": {
+      "contract": 2,
+      "visualParity": 1,
+      "canvas": 2,
+      "interactionFit": 2,
+      "runtime": 3
+    },
+    "evidence": {
+      "automated": "partial",
+      "deterministicPreview": "none",
+      "installedCodex": "pending",
+      "humanReview": "pending"
+    },
+    "refs": [
+      "packages/core/src/representation.ts",
+      "apps/mcp-app/src/widget-client.ts"
+    ],
+    "gaps": [
+      "No dedicated status, progression, alert, and action hierarchy exists.",
+      "The current generic metric treatment risks looking like an arbitrary dashboard."
+    ],
+    "nextAction": "Design a restrained monitoring view that prioritizes change, alert thresholds, and next actions."
+  }
+}

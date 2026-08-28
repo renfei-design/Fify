@@ -10,7 +10,7 @@ From a cloned repository, the local install is one command:
 pnpm codex:install
 ```
 
-That command builds a portable MCP server inside the plugin, validates the manifest and marketplace entry, registers the local marketplace, and installs Fify. Start a new Codex task after installation so the new skill and tool are loaded.
+The installer refuses to replace Fify while the ChatGPT/Codex desktop MCP host is running. Fully quit the app with Command-Q, run the command from Terminal, then reopen it. Closing a window or opening a new task does not refresh the long-lived MCP host. Run `pnpm codex:verify-host` from the repository; it exercises the exact six-section, three-image comparison. The preflight must pass and a brand-new tagged desktop task must mount the native widget before Fify is accepted as ready. Never resume a task created before installation because its MCP tool snapshot remains stale.
 
 Try one of these prompts:
 

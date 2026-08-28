@@ -1,3 +1,5 @@
+import { informationMediaV1Schema } from "@fify/core";
+
 type PresentationItem = { id: string; [key: string]: unknown };
 type PresentationSection = {
   id: string;
@@ -7,7 +9,7 @@ type PresentationSection = {
 
 export type InformationEnvelopeInput = {
   sources: Array<{ id: string; [key: string]: unknown }>;
-  media?: Array<{ id: string; [key: string]: unknown }>;
+  media?: Array<Record<string, unknown>>;
   sections: PresentationSection[];
   suggestedRefinements: string[];
   continuationState?: unknown;
@@ -19,6 +21,93 @@ export type PresentationIdRepair = {
   from: string;
   to: string;
 };
+
+export type OptionalMediaDiagnostic = {
+  path: Array<string | number>;
+  action: "dropped" | "repaired";
+  message: string;
+};
+
+function normalizeOptionalMedia(input: InformationEnvelopeInput): {
+  media: Array<{ id: string; [key: string]: unknown }> | undefined;
+  diagnostics: OptionalMediaDiagnostic[];
+} {
+  if (!input.media) return { media: undefined, diagnostics: [] };
+
+  const diagnostics: OptionalMediaDiagnostic[] = [];
+  const sourceIds = new Set(input.sources.map((source) => source.id));
+  const authoritativeIds = new Set([
+    ...sourceIds,
+    ...input.sections.map((section) => section.id),
+    ...input.sections.flatMap((section) =>
+      section.items.map((item) => item.id),
+    ),
+  ]);
+  const acceptedMediaIds = new Set<string>();
+  const media: Array<{ id: string; [key: string]: unknown }> = [];
+
+  input.media.forEach((rawMedia, index) => {
+    if (media.length >= 4) {
+      diagnostics.push({
+        path: ["media", index],
+        action: "dropped",
+        message: "Optional media exceeds the four-item display limit.",
+      });
+      return;
+    }
+
+    const candidate =
+      rawMedia.role === "product"
+        ? { ...rawMedia, role: "illustration" }
+        : rawMedia;
+    if (candidate !== rawMedia) {
+      diagnostics.push({
+        path: ["media", index, "role"],
+        action: "repaired",
+        message: "Mapped presentation role 'product' to 'illustration'.",
+      });
+    }
+
+    const parsed = informationMediaV1Schema.safeParse(candidate);
+    if (!parsed.success) {
+      diagnostics.push({
+        path: ["media", index],
+        action: "dropped",
+        message: parsed.error.issues
+          .slice(0, 2)
+          .map((issue) => issue.message)
+          .join(" "),
+      });
+      return;
+    }
+
+    if (!sourceIds.has(parsed.data.sourceId)) {
+      diagnostics.push({
+        path: ["media", index, "sourceId"],
+        action: "dropped",
+        message: `Optional media references unknown source '${parsed.data.sourceId}'.`,
+      });
+      return;
+    }
+
+    if (
+      authoritativeIds.has(parsed.data.id) ||
+      acceptedMediaIds.has(parsed.data.id)
+    ) {
+      diagnostics.push({
+        path: ["media", index, "id"],
+        action: "dropped",
+        message: `Optional media ID '${parsed.data.id}' is not globally unique.`,
+      });
+      return;
+    }
+
+    acceptedMediaIds.add(parsed.data.id);
+    media.push(parsed.data);
+  });
+
+  return { media, diagnostics };
+}
 
 function suffixedSemanticId(
   original: string,
@@ -42,30 +131,50 @@ function suffixedSemanticId(
  */
 export function normalizePresentationInput<T extends InformationEnvelopeInput>(
   input: T,
-): { value: T; repairs: PresentationIdRepair[] } {
+): {
+  value: T;
+  repairs: PresentationIdRepair[];
+  mediaDiagnostics: OptionalMediaDiagnostic[];
+} {
+  const normalizedMedia = normalizeOptionalMedia(input);
   const suggestedRefinements = input.suggestedRefinements.slice(0, 2);
   const refinementsChanged =
     suggestedRefinements.length !== input.suggestedRefinements.length;
+  const mediaChanged =
+    input.media !== undefined &&
+    (normalizedMedia.diagnostics.length > 0 ||
+      normalizedMedia.media?.length !== input.media.length);
+  const presentationInput = (
+    mediaChanged
+      ? { ...input, media: normalizedMedia.media }
+      : input
+  ) as T;
   if (input.continuationState) {
     return {
-      value: refinementsChanged
-        ? ({ ...input, suggestedRefinements } as T)
-        : input,
+      value:
+        refinementsChanged || mediaChanged
+          ? ({ ...presentationInput, suggestedRefinements } as T)
+          : input,
       repairs: [],
+      mediaDiagnostics: normalizedMedia.diagnostics,
     };
   }
 
   const repairs: PresentationIdRepair[] = [];
   const reserved = new Set([
-    ...input.sources.map((source) => source.id),
-    ...(input.media ?? []).map((media) => media.id),
+    ...presentationInput.sources.map((source) => source.id),
+    ...(presentationInput.media ?? []).flatMap((media) =>
+      typeof media.id === "string" ? [media.id] : [],
+    ),
   ]);
   const originalItemIds = new Set(
-    input.sections.flatMap((section) => section.items.map((item) => item.id)),
+    presentationInput.sections.flatMap((section) =>
+      section.items.map((item) => item.id),
+    ),
   );
 
   const sectionIds = new Set(reserved);
-  const sections = input.sections.map((section, sectionIndex) => {
+  const sections = presentationInput.sections.map((section, sectionIndex) => {
     let id = section.id;
     const unavailable = new Set([...sectionIds, ...originalItemIds]);
     if (unavailable.has(id)) {
@@ -100,15 +209,20 @@ export function normalizePresentationInput<T extends InformationEnvelopeInput>(
     }),
   }));
 
-  if (repairs.length === 0 && !refinementsChanged) {
-    return { value: input, repairs };
+  if (repairs.length === 0 && !refinementsChanged && !mediaChanged) {
+    return {
+      value: input,
+      repairs,
+      mediaDiagnostics: normalizedMedia.diagnostics,
+    };
   }
   return {
     value: {
-      ...input,
+      ...presentationInput,
       sections: normalizedSections,
       suggestedRefinements,
     } as T,
     repairs,
+    mediaDiagnostics: normalizedMedia.diagnostics,
   };
 }

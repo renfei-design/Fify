@@ -1,0 +1,48 @@
+{
+  "version": "1.0",
+  "id": "profile-reference",
+  "name": "Profile and reference",
+  "reviewedAt": "2026-08-27",
+  "contract": {
+    "userJob": "Understand who a person is, what defines them, and why they matter.",
+    "triggers": ["who is", "profile", "at a glance"],
+    "exclusions": ["career timeline only", "comparison between people"],
+    "roles": ["identity", "portrait", "defining-fact", "career-context"],
+    "layout": {
+      "wide": "Use a focal portrait beside defining facts, followed by supporting sections.",
+      "compact": "Stack identity, portrait, defining facts, and supporting sections in reading order.",
+      "minimumItems": 1,
+      "maximumItems": 1
+    },
+    "interactions": ["follow-up-refinement"],
+    "fallback": "Preserve the complete sourced profile and omit media when provenance is unavailable."
+  },
+  "implementation": {
+    "blueprints": ["profile-reference"],
+    "components": ["Hero", "Image", "FactList", "Timeline"]
+  },
+  "quality": {
+    "stage": "verified",
+    "priority": "P3",
+    "scores": {
+      "contract": 4,
+      "visualParity": 4,
+      "canvas": 4,
+      "interactionFit": 4,
+      "runtime": 4
+    },
+    "evidence": {
+      "automated": "pass",
+      "deterministicPreview": "pass",
+      "installedCodex": "pass",
+      "humanReview": "pass"
+    },
+    "refs": [
+      "apps/mcp-app/src/profile-media.test.ts",
+      "apps/mcp-app/src/server.integration.test.ts",
+      "apps/mcp-app/src/widget.test.ts"
+    ],
+    "gaps": [],
+    "nextAction": "Maintain portrait provenance, opt-out behavior, and web-parity regression coverage."
+  }
+}

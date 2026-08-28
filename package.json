@@ -35,15 +35,18 @@
     "plugin:build": "pnpm --filter @fify/core build && pnpm --filter @fify/mcp-app build",
     "plugin:bundle": "node scripts/install-codex-plugin.mjs --bundle-only",
     "plugin:validate": "node scripts/validate-codex-plugin.mjs",
+    "scenario:new": "node scripts/scenario.mjs new",
+    "scenario:check": "node scripts/scenario.mjs check",
     "codex:install": "node scripts/install-codex-plugin.mjs",
+    "codex:verify-host": "node scripts/verify-codex-host.mjs",
     "codex:build": "pnpm plugin:build",
-    "plugin:test": "pnpm plugin:validate && pnpm --filter @fify/core test && pnpm --filter @fify/mcp-app test",
+    "plugin:test": "pnpm scenario:check && pnpm plugin:validate && pnpm --filter @fify/core test && pnpm --filter @fify/mcp-app test",
     "check:public": "node scripts/check-public-safety.mjs",
     "check:history": "node scripts/check-public-safety.mjs --history",
     "verify:packages": "pnpm build && node scripts/verify-packages.mjs",
     "typecheck": "turbo run typecheck",
     "format": "prettier --write .",
-    "check": "pnpm check:public && pnpm typecheck && pnpm test && pnpm eval && pnpm build && pnpm plugin:validate && node scripts/verify-packages.mjs"
+    "check": "pnpm check:public && pnpm scenario:check && pnpm typecheck && pnpm test && pnpm eval && pnpm build && pnpm plugin:validate && node scripts/verify-packages.mjs"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.13.0",

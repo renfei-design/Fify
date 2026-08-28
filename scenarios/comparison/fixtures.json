@@ -1,0 +1,36 @@
+{
+  "version": "1.0",
+  "scenarioId": "comparison",
+  "cases": [
+    {
+      "id": "canonical-three-options",
+      "prompt": "@Fify compare MacBook Neo, MacBook Air, and MacBook Pro by starting price, best fit, memory, battery life, and tradeoffs. Use official product images when available.",
+      "canvas": "wide",
+      "expectedActivation": true
+    },
+    {
+      "id": "compact-two-options",
+      "prompt": "@Fify compare MacBook Air and MacBook Pro by price, portability, performance, and battery life.",
+      "canvas": "compact",
+      "expectedActivation": true
+    },
+    {
+      "id": "misspelled-products-with-media",
+      "prompt": "@Fify compare Vivo Encore Free, Sony LindBuds, and Apple Airpod pro. Resolve the model names and use official product images when available.",
+      "canvas": "wide",
+      "expectedActivation": true
+    },
+    {
+      "id": "maximum-five-options",
+      "prompt": "@Fify compare these five implementation vendors by cost, speed, support, integration risk, and contract flexibility.",
+      "canvas": "wide",
+      "expectedActivation": true
+    },
+    {
+      "id": "negative-activation",
+      "prompt": "Compare pilot, phased, and company-wide rollout options by cost, implementation risk, learning speed, and time to value.",
+      "canvas": "either",
+      "expectedActivation": false
+    }
+  ]
+}

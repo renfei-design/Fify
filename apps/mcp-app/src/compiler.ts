@@ -7,6 +7,8 @@ import {
   parseGroundedCompositionPlan,
   uiExperienceToA2UI,
   type InformationEnvelopeV1,
+  type GroundedCompositionPlan,
+  type GroundedCompilation,
 } from "@fify/core";
 import type { InformationUIRunStore } from "./run-store.js";
 import {
@@ -19,7 +21,14 @@ export async function compileInformationUIRun(
   store: InformationUIRunStore,
   runId: string,
   envelope: InformationEnvelopeV1,
-  options: { profileMedia?: ProfileMediaLookupOptions } = {},
+  options: {
+    profileMedia?: ProfileMediaLookupOptions;
+    compile?: (
+      envelope: InformationEnvelopeV1,
+      composition: GroundedCompositionPlan,
+      responseId: string,
+    ) => GroundedCompilation;
+  } = {},
 ) {
   let groundedEnvelope = envelope;
   const profileSubject = profileSubjectForEnvelope(envelope);
@@ -103,11 +112,23 @@ export async function compileInformationUIRun(
     });
   }
 
-  const compiled = compileGroundedInformationUI(
-    groundedEnvelope,
-    composition,
-    runId,
-  );
+  const compile = options.compile ?? compileGroundedInformationUI;
+  let compiled: GroundedCompilation;
+  try {
+    compiled = compile(groundedEnvelope, composition, runId);
+  } catch (error) {
+    if (!(groundedEnvelope.media ?? []).length) throw error;
+    store.append(runId, {
+      type: "status",
+      stage: "fallback",
+      message:
+        "Optional media was incompatible with the layout; continuing with the complete interactive view without imagery.",
+    });
+    groundedEnvelope = { ...groundedEnvelope, media: [] };
+    composition = createDefaultGroundedCompositionPlan(groundedEnvelope);
+    compilerMode = "deterministic-fallback";
+    compiled = compile(groundedEnvelope, composition, runId);
+  }
   for (const message of uiExperienceToA2UI(compiled.experience, {
     surfaceId: `fify-${runId}`,
   }))

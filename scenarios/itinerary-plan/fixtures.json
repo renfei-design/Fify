@@ -1,0 +1,24 @@
+{
+  "version": "1.0",
+  "scenarioId": "itinerary-plan",
+  "cases": [
+    {
+      "id": "canonical-three-day-plan",
+      "prompt": "@Fify show this three-day conference itinerary as an interactive view I can refine.",
+      "canvas": "wide",
+      "expectedActivation": true
+    },
+    {
+      "id": "compact-two-day-plan",
+      "prompt": "Use Fify to organize this two-day itinerary with travel times and constraints.",
+      "canvas": "compact",
+      "expectedActivation": true
+    },
+    {
+      "id": "negative-activation",
+      "prompt": "Make this a three-day itinerary I can refine.",
+      "canvas": "either",
+      "expectedActivation": false
+    }
+  ]
+}

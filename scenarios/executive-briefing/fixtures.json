@@ -1,0 +1,30 @@
+{
+  "version": "1.0",
+  "scenarioId": "executive-briefing",
+  "cases": [
+    {
+      "id": "canonical-operating-brief",
+      "prompt": "Revenue remains on plan, enterprise implementation backlog is up 18%, and renewal exposure is concentrated in three strategic accounts. The proposed response is a 90-day partner-capacity plan owned by the COO, with a decision required Friday. Use Fify to turn this into an executive briefing with signals, the decision, risks, and next actions.",
+      "canvas": "wide",
+      "expectedActivation": true
+    },
+    {
+      "id": "compact-operating-brief",
+      "prompt": "@Fify brief leadership: revenue is on plan, backlog is up 18%, three accounts hold the renewal risk, and the COO needs a Friday decision on a 90-day partner plan.",
+      "canvas": "compact",
+      "expectedActivation": true
+    },
+    {
+      "id": "follow-up-refinement",
+      "prompt": "Use Fify to update the executive briefing by adding a Thursday finance review while preserving the COO recommendation and Friday decision.",
+      "canvas": "either",
+      "expectedActivation": true
+    },
+    {
+      "id": "negative-activation",
+      "prompt": "Turn these operating results into an executive briefing for leadership.",
+      "canvas": "either",
+      "expectedActivation": false
+    }
+  ]
+}

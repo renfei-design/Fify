@@ -2,8 +2,10 @@ import { informationUISurfaceFamilyForType } from "@fify/core";
 import { runInformationUIWidget } from "./widget-client.js";
 import { informationUIWidgetTheme } from "./widget-theme.js";
 
-export const INFORMATION_UI_RESOURCE_URI = "ui://fify/information-ui-v9.html";
+export const INFORMATION_UI_RESOURCE_URI = "ui://fify/information-ui-v11.html";
 export const LEGACY_INFORMATION_UI_RESOURCE_URIS = [
+  "ui://fify/information-ui-v10.html",
+  "ui://fify/information-ui-v9.html",
   "ui://fify/information-ui-v8.html",
   "ui://fify/information-ui-v7.html",
   "ui://fify/information-ui-v6.html",

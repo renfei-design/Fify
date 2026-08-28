@@ -8,6 +8,7 @@ import {
   parseGroundedCompositionPlan,
   type InformationEnvelopeV1,
 } from "./grounded.js";
+import { maxRepresentationSlots } from "./representation.js";
 
 const envelope: InformationEnvelopeV1 = {
   version: "1.0",
@@ -49,6 +50,73 @@ const envelope: InformationEnvelopeV1 = {
 };
 
 describe("InformationEnvelopeV1", () => {
+  it("compiles the legal maximum of eight sections plus four media slots", () => {
+    const maximum = structuredClone(envelope);
+    maximum.originalRequest =
+      "Compare four products across every grounded criterion.";
+    maximum.sections = Array.from({ length: 8 }, (_, sectionIndex) => ({
+      id: `criterion-${sectionIndex + 1}`,
+      title: `Criterion ${sectionIndex + 1}`,
+      body: "A grounded shared criterion.",
+      sourceIds: ["brief"],
+      items: ["Alpha", "Beta", "Gamma", "Delta"].map(
+        (label, itemIndex) => ({
+          id: `criterion-${sectionIndex + 1}-option-${itemIndex + 1}`,
+          label,
+          value: `Value ${itemIndex + 1}`,
+          detail: "Grounded comparison detail.",
+          sourceIds: ["brief"],
+        }),
+      ),
+    }));
+    maximum.media = Array.from({ length: 4 }, (_, index) => ({
+      id: `product-media-${index + 1}`,
+      url: `https://www.apple.com/images/product-${index + 1}.jpg`,
+      alt: `Product ${index + 1}`,
+      caption: `Official product ${index + 1}`,
+      role: "illustration" as const,
+      subject: ["Alpha", "Beta", "Gamma", "Delta"][index]!,
+      sourceId: "brief",
+    }));
+
+    const result = compileGroundedInformationUI(
+      maximum,
+      createDefaultGroundedCompositionPlan(maximum),
+      "run-maximum-slots",
+    );
+
+    expect(result.experience.representation.slots).toHaveLength(
+      maxRepresentationSlots,
+    );
+    expect(result.experience.nodes.filter((node) => node.type === "Image"))
+      .toHaveLength(4);
+    expect(
+      result.experience.nodes.filter((node) => node.type === "Comparison"),
+    ).toHaveLength(8);
+  });
+
+  it("accepts supported official OPPO and Sony product image hosts", () => {
+    for (const [id, url] of [
+      ["oppo-product", "https://www.oppo.com/images/product.jpg"],
+      ["sony-product", "https://www.sony.com/images/product.jpg"],
+    ] as const) {
+      const candidate = structuredClone(envelope);
+      candidate.media = [
+        {
+          id,
+          url,
+          alt: id,
+          caption: "Official product image",
+          role: "illustration",
+          sourceId: "brief",
+        },
+      ];
+      expect(informationEnvelopeV1Schema.safeParse(candidate).success).toBe(
+        true,
+      );
+    }
+  });
+
   it("accepts an optional canonical profile subject without treating it as factual copy", () => {
     const profile = informationEnvelopeV1Schema.parse({
       ...structuredClone(envelope),
@@ -68,6 +136,11 @@ describe("InformationEnvelopeV1", () => {
     );
 
     expect(plan.placements[0]?.component).toBe("Comparison");
+    expect(result.experience.representation.blueprintIds).toEqual([
+      "compare-decide",
+    ]);
+    expect(result.experience.representation.slots[0]?.role).toBe("criteria");
+    expect(result.experience.screen.contextLabel).toBe("Comparison");
     expect(section?.title).toBe("Rollout options");
     expect(section?.text).toBe(
       "The options trade lower cost for lower launch risk.",
@@ -91,6 +164,91 @@ describe("InformationEnvelopeV1", () => {
       },
     ]);
     expect(result.experience.suggestions).toEqual(["Focus on the risks"]);
+  });
+
+  it("does not mistake assumptions and verdicts for shared comparison criteria", () => {
+    const comparison = structuredClone(envelope);
+    comparison.originalRequest =
+      "Compare Vivo Encore Free, Sony LindBuds, and Apple Airpod pro";
+    const options = ["OPPO Enco Free4", "Sony LinkBuds Fit", "AirPods Pro 3"];
+    comparison.sections = [
+      {
+        id: "model-assumptions",
+        title: "Model assumptions",
+        body: "The request is normalized to canonical current product names.",
+        sourceIds: ["brief"],
+        items: options.map((value, index) => ({
+          id: `assumption-${index + 1}`,
+          label: [
+            "\u201cVivo Encore Free\u201d",
+            "\u201cSony LindBuds\u201d",
+            "\u201cApple Airpod pro\u201d",
+          ][index]!,
+          value,
+          detail: "Canonical product used for the grounded comparison.",
+          sourceIds: ["brief"],
+        })),
+      },
+      {
+        id: "quick-verdict",
+        title: "Quick verdict",
+        body: "Choose by ecosystem and fit priority.",
+        sourceIds: ["brief"],
+        items: options.map((value, index) => ({
+          id: `verdict-${index + 1}`,
+          label: ["Best value", "Best secure fit", "Best for iPhone"][index]!,
+          value,
+          detail: "Grounded recommendation rationale.",
+          sourceIds: ["brief"],
+        })),
+      },
+      {
+        id: "key-comparison",
+        title: "Key comparison",
+        body: "Manufacturer specifications use different test conditions.",
+        sourceIds: ["brief"],
+        items: options.map((label, index) => ({
+          id: `spec-${index + 1}`,
+          label,
+          value: ["6 h ANC", "5.5 h ANC", "8 h ANC"][index]!,
+          detail: "Grounded specification summary.",
+          sourceIds: ["brief"],
+        })),
+      },
+      {
+        id: "buying-guidance",
+        title: "Which one should you buy?",
+        body: "Start with your phone, then choose the trade-off.",
+        sourceIds: ["brief"],
+        items: options.map((value, index) => ({
+          id: `buy-${index + 1}`,
+          label: ["Android value", "Cross-platform fit", "iPhone"][index]!,
+          value,
+          detail: "Grounded buying guidance.",
+          sourceIds: ["brief"],
+        })),
+      },
+    ];
+
+    const plan = createDefaultGroundedCompositionPlan(comparison);
+    const result = compileGroundedInformationUI(
+      comparison,
+      plan,
+      "run-misspelled-products",
+    );
+
+    expect(plan.placements.map((placement) => placement.component)).toEqual([
+      "FactList",
+      "FactList",
+      "Comparison",
+      "FactList",
+    ]);
+    expect(result.experience.representation.blueprintIds).toEqual([
+      "compare-decide",
+    ]);
+    expect(
+      result.experience.representation.slots.map((slot) => slot.role),
+    ).toEqual(["context", "recommendation", "criteria", "evidence"]);
   });
 
   it("keeps grounded semantic IDs separate from internal representation slots", () => {
@@ -353,6 +511,90 @@ describe("InformationEnvelopeV1", () => {
         .error?.issues.map((issue) => issue.message)
         .join(" "),
     ).toContain("Duplicate ID");
+  });
+
+  it("associates supported official product imagery with comparison options", () => {
+    const comparison = structuredClone(envelope);
+    comparison.originalRequest =
+      "Compare MacBook Neo and MacBook Air and help me choose.";
+    comparison.sections = [
+      {
+        id: "recommendation",
+        title: "Recommendation",
+        body: "MacBook Air is the stronger balance for most buyers.",
+        sourceIds: ["brief"],
+        items: [
+          {
+            id: "recommended-option",
+            label: "Recommended option",
+            value: "MacBook Air",
+            detail: "It provides more memory headroom and longevity.",
+            sourceIds: ["brief"],
+          },
+        ],
+      },
+      {
+        id: "starting-price",
+        title: "Starting price comparison",
+        body: "Current U.S. starting prices.",
+        sourceIds: ["brief"],
+        items: [
+          {
+            id: "neo-price",
+            label: "MacBook Neo",
+            value: "$599",
+            detail: "Lowest price.",
+            sourceIds: ["brief"],
+          },
+          {
+            id: "air-price",
+            label: "MacBook Air",
+            value: "$1,099",
+            detail: "Higher starting price.",
+            sourceIds: ["brief"],
+          },
+        ],
+      },
+    ];
+    comparison.sources.push({
+      id: "apple-air",
+      title: "MacBook Air - Apple",
+      url: "https://www.apple.com/macbook-air/",
+    });
+    comparison.media = [
+      {
+        id: "air-product",
+        url: "https://www.apple.com/v/macbook-air/images/meta/macbook-air.png",
+        alt: "MacBook Air",
+        caption: "Official MacBook Air product image",
+        role: "illustration",
+        subject: "MacBook Air",
+        sourceId: "apple-air",
+      },
+    ];
+
+    const result = compileGroundedInformationUI(
+      comparison,
+      createDefaultGroundedCompositionPlan(comparison),
+      "run-product-comparison",
+    );
+
+    expect(result.experience.representation).toMatchObject({
+      mode: "blueprint",
+      blueprintIds: ["compare-decide"],
+      topology: "responsive-grid",
+    });
+    expect(
+      result.experience.representation.slots.map((slot) => slot.role),
+    ).toEqual(["featured", "recommendation", "criteria"]);
+    expect(
+      result.experience.nodes.find((node) => node.id === "media-air-product"),
+    ).toMatchObject({
+      type: "Image",
+      label: "MacBook Air",
+      title: "MacBook Air",
+      value: comparison.media[0]!.url,
+    });
   });
 
   it("rejects invented, missing, or repeated semantic references", () => {

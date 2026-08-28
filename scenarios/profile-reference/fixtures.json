@@ -1,0 +1,24 @@
+{
+  "version": "1.0",
+  "scenarioId": "profile-reference",
+  "cases": [
+    {
+      "id": "canonical-person-profile",
+      "prompt": "@Fify Who is Steve Jobs?",
+      "canvas": "wide",
+      "expectedActivation": true
+    },
+    {
+      "id": "compact-person-profile",
+      "prompt": "Use Fify to show who Steve Jobs was at a glance.",
+      "canvas": "compact",
+      "expectedActivation": true
+    },
+    {
+      "id": "negative-activation",
+      "prompt": "Who is Steve Jobs?",
+      "canvas": "either",
+      "expectedActivation": false
+    }
+  ]
+}

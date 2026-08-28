@@ -30,16 +30,17 @@ const sourceInput = z
   .passthrough();
 const mediaInput = z
   .object({
-    id: z.string(),
-    url: z.string(),
-    alt: z.string(),
-    caption: z.string(),
-    role: z.string(),
-    sourceId: semanticId,
+    id: z.string().optional(),
+    url: z.string().optional(),
+    alt: z.string().optional(),
+    caption: z.string().optional(),
+    role: z.string().optional(),
+    subject: z.string().optional(),
+    sourceId: semanticId.optional(),
   })
   .passthrough()
   .describe(
-    "Optional pre-resolved attributed visual evidence from an allowed Wikimedia or Openverse image URL and an existing source page.",
+    "Optional pre-resolved attributed visual evidence from an allowed Wikimedia, Openverse, or supported official product image URL and an existing source page. Set subject to the exact compared option label when the image identifies a product.",
   );
 const itemInput = z
   .object({
@@ -87,6 +88,9 @@ function registerInformationUIResource(
               resourceDomains: [
                 "https://upload.wikimedia.org",
                 "https://api.openverse.org",
+                "https://www.apple.com",
+                "https://www.oppo.com",
+                "https://www.sony.com",
               ],
             },
           },
@@ -117,7 +121,7 @@ export function createFifyServer(store = new InformationUIRunStore()) {
     {
       title: "Render information as an interactive view",
       description:
-        "Call only when the user explicitly invokes Fify, names Fify, or asks to render the answer as an interactive view. Never call for an ordinary untagged request, even when a comparison, plan, timeline, checklist, or decision view could help. Call at most once per user turn; never retry because the mounted card provides its own terminal fallback. Complete factual reasoning first and always pass the authoritative plain answer. Every source, media, section, and item ID should be globally unique; Fify safely repairs presentation-only section/item collisions and extra suggested refinements on initial renders, then returns a terminal diagnostic for other invalid input. If the user supplied sufficient facts, use them directly and invoke immediately without extra retrieval. For a named real-person profile, set profileSubject to the canonical name unless the user requests no image; Fify will perform a bounded trusted Wikimedia portrait lookup. Pre-resolved attributed Wikimedia or Openverse media may also be supplied, but never invent or guess media URLs.",
+        "Call only when the user explicitly invokes Fify, names Fify, or asks for an interactive view. Never call for an ordinary untagged request. Call at most once per user turn and always pass the authoritative plain answer. Every source, media, section, and item ID must be globally unique. For a named real-person profile, set profileSubject to the canonical name unless the user requests no image. For a physical-product comparison, resolve misspellings first; use only canonical unquoted product names as option labels; search for exact product imagery with the factual research; and include supported official or openly licensed media when an exact grounded image URL exists, with media.subject equal to the canonical option label. Put disambiguation in the answer or a supporting Assumptions section, never in the comparison matrix. Use a Recommendation, Verdict, Answer, or Summary section for the decision. Then use at least three separate shared-criterion sections when the facts support them; every criterion must repeat the same two-to-five canonical option labels in the same order and contain one scannable value per option. Never pack the entire spec sheet into one criterion. Never invent or guess media URLs.",
       inputSchema: {
         version: z.string(),
         originalRequest: z.string(),
@@ -161,7 +165,27 @@ export function createFifyServer(store = new InformationUIRunStore()) {
       const normalized = normalizePresentationInput(
         input as InformationEnvelopeInput,
       );
-      const parsed = informationEnvelopeV1Schema.safeParse(normalized.value);
+      let parsed = informationEnvelopeV1Schema.safeParse(normalized.value);
+      let envelopeMediaDiagnostic: string | undefined;
+
+      // Media is optional presentation enrichment. Keep a second independent
+      // safety barrier here so a future schema-level or cross-field media rule
+      // can never turn an otherwise valid information view into text fallback.
+      if (
+        !parsed.success &&
+        Array.isArray(normalized.value.media) &&
+        normalized.value.media.length > 0
+      ) {
+        const withoutMedia = informationEnvelopeV1Schema.safeParse({
+          ...normalized.value,
+          media: [],
+        });
+        if (withoutMedia.success) {
+          parsed = withoutMedia;
+          envelopeMediaDiagnostic =
+            "media: dropped (Optional media failed envelope-level validation; the grounded interactive view continued without imagery.)";
+        }
+      }
       if (!parsed.success) {
         const fallback =
           typeof input.groundedAnswer === "string"
@@ -193,6 +217,17 @@ export function createFifyServer(store = new InformationUIRunStore()) {
         };
       }
       const fallbackText = formatInformationEnvelopeFallback(parsed.data);
+      const mediaDiagnostics = [
+        ...normalized.mediaDiagnostics.map(
+          (entry) =>
+            `${entry.path.join(".")}: ${entry.action} (${entry.message})`,
+        ),
+        ...(envelopeMediaDiagnostic ? [envelopeMediaDiagnostic] : []),
+      ];
+      const mediaDiagnostic = mediaDiagnostics.length
+        ? mediaDiagnostics
+            .join(" ")
+        : undefined;
       try {
         const hostMeta = (extra as unknown as { _meta?: unknown })._meta;
         const { run, created } = store.findOrCreate(
@@ -222,6 +257,7 @@ export function createFifyServer(store = new InformationUIRunStore()) {
             lastSequence: result?.lastSequence ?? run.frames.length,
             fallbackText,
             frames: result?.frames ?? [],
+            ...(mediaDiagnostic ? { diagnostic: mediaDiagnostic } : {}),
           },
         };
       } catch (error) {

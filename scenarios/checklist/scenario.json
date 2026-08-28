@@ -1,0 +1,51 @@
+{
+  "version": "1.0",
+  "id": "checklist",
+  "name": "Checklist and task plan",
+  "reviewedAt": "2026-08-27",
+  "contract": {
+    "userJob": "Work through a bounded set of tasks while preserving completion state and context.",
+    "triggers": ["checklist", "task plan", "work through"],
+    "exclusions": ["read-only procedure", "consequential external action"],
+    "roles": ["progress", "task", "task-detail", "completion-state"],
+    "layout": {
+      "wide": "Group related tasks with visible progress and restrained supporting detail.",
+      "compact": "Use one task column with tap-safe state controls and concise detail.",
+      "minimumItems": 1,
+      "maximumItems": 20
+    },
+    "interactions": ["toggle-task", "follow-up-refinement"],
+    "fallback": "Preserve every grounded task, prerequisite, caution, and completion condition."
+  },
+  "implementation": {
+    "blueprints": ["procedure", "workflow-action", "open-composition"],
+    "components": ["Checklist", "Progress"]
+  },
+  "quality": {
+    "stage": "baseline",
+    "priority": "P1",
+    "scores": {
+      "contract": 3,
+      "visualParity": 2,
+      "canvas": 2,
+      "interactionFit": 3,
+      "runtime": 3
+    },
+    "evidence": {
+      "automated": "partial",
+      "deterministicPreview": "pass",
+      "installedCodex": "pass",
+      "humanReview": "fail"
+    },
+    "refs": [
+      "apps/mcp-app/scripts/interaction-preview.mjs",
+      "apps/mcp-app/src/widget.test.ts",
+      "plugins/fify/evals/reviewer-cases.json"
+    ],
+    "gaps": [
+      "Visual hierarchy and component styling do not yet meet the web North Star.",
+      "Compact task density and completion feedback need scenario-specific design."
+    ],
+    "nextAction": "Use the scenario-builder workflow to redesign checklist hierarchy, task states, and compact behavior."
+  }
+}

@@ -1,5 +1,8 @@
 import { afterEach, describe, expect, it } from "vitest";
-import type { InformationEnvelopeV1 } from "@fify/core";
+import {
+  compileGroundedInformationUI,
+  type InformationEnvelopeV1,
+} from "@fify/core";
 import { compileInformationUIRun } from "./compiler.js";
 import { InformationUIRunStore } from "./run-store.js";
 
@@ -52,5 +55,61 @@ describe("information UI compiler latency policy", () => {
       type: "complete",
       compilerMode: "deterministic-fallback",
     }));
+  });
+
+  it("retries compilation without optional media instead of failing the interactive view", async () => {
+    const withMedia: InformationEnvelopeV1 = {
+      ...envelope,
+      sources: [
+        {
+          id: "product-source",
+          title: "Product source",
+          url: "https://www.apple.com/product/",
+        },
+      ],
+      media: [
+        {
+          id: "product-image",
+          url: "https://www.apple.com/images/product.jpg",
+          alt: "Product",
+          caption: "Official product image",
+          role: "illustration",
+          sourceId: "product-source",
+        },
+      ],
+    };
+    const store = new InformationUIRunStore();
+    const run = store.findOrCreate("compiler-media-fallback", withMedia).run;
+
+    await compileInformationUIRun(store, run.id, withMedia, {
+      compile: (candidate, composition, responseId) => {
+        if (candidate.media?.length) {
+          throw new Error("Synthetic media-layout incompatibility.");
+        }
+        return compileGroundedInformationUI(
+          candidate,
+          composition,
+          responseId,
+        );
+      },
+    });
+
+    const result = store.read(run.id, 0)!;
+    expect(result.state).toBe("complete");
+    expect(result.frames).toContainEqual(
+      expect.objectContaining({
+        type: "status",
+        stage: "fallback",
+        message: expect.stringContaining(
+          "continuing with the complete interactive view without imagery",
+        ),
+      }),
+    );
+    expect(result.frames).toContainEqual(
+      expect.objectContaining({
+        type: "complete",
+        envelope: expect.objectContaining({ media: [] }),
+      }),
+    );
   });
 });

@@ -17,7 +17,9 @@ export function runInformationUIWidget(initialSequence = 0) {
   let fallbackText = "";
   let expanded = false;
   let currentSources = new Map<string, AnyRecord>();
+  let currentMediaBySubject = new Map<string, AnyRecord>();
   let currentSlotRoles = new Map<string, string>();
+  let currentBlueprint = "open-composition";
   const pending = new Map<
     number,
     { resolve: (value: unknown) => void; reject: (reason: unknown) => void }
@@ -150,10 +152,17 @@ export function runInformationUIWidget(initialSequence = 0) {
   }
 
   function comparisonOptionKey(value: unknown) {
-    return String(value ?? "")
+    return comparisonOptionLabel(value)
       .trim()
       .replace(/\s+/g, " ")
       .toLocaleLowerCase();
+  }
+
+  function comparisonOptionLabel(value: unknown) {
+    return String(value ?? "")
+      .trim()
+      .replace(/^[\s“”‘’"']+|[\s“”‘’"']+$/g, "")
+      .trim();
   }
 
   function comparisonSignature(node: AnyRecord) {
@@ -176,14 +185,18 @@ export function runInformationUIWidget(initialSequence = 0) {
     return `${labels.length} options compared`;
   }
 
-  function renderComparisonMatrix(comparisons: AnyRecord[], primary: boolean) {
+  function renderComparisonMatrix(
+    comparisons: AnyRecord[],
+    primary: boolean,
+    recommendationNode?: AnyRecord,
+  ) {
     const first = comparisons[0] ?? {};
     const options: Array<{ id: string; key: string; label: string }> = (
       first.items ?? []
     ).map((item: AnyRecord) => ({
       id: String(item.id),
       key: comparisonOptionKey(item.label),
-      label: String(item.label || "Option"),
+      label: comparisonOptionLabel(item.label) || "Option",
     }));
     const selectable = comparisons.some(
       (comparison) => comparison.action?.type === "select",
@@ -205,9 +218,7 @@ export function runInformationUIWidget(initialSequence = 0) {
       element(
         "p",
         "",
-        `${options.length} options · ${comparisons.length} shared ${
-          comparisons.length === 1 ? "criterion" : "criteria"
-        }`,
+        "Start with the decision, keep each option visually identifiable, and align the differences that matter.",
       ),
     );
     section.append(intro);
@@ -227,11 +238,222 @@ export function runInformationUIWidget(initialSequence = 0) {
           ?.some((item) => state.selected.has(String(item.id))),
       )?.key ?? "";
 
-    function chooseOption(key: string) {
-      for (const items of optionItems.values())
-        for (const item of items) state.selected.delete(String(item.id));
-      for (const item of optionItems.get(key) ?? [])
-        state.selected.add(String(item.id));
+    function itemsByOption(comparison: AnyRecord | undefined) {
+      return new Map<string, AnyRecord>(
+        (comparison?.items ?? []).map((item: AnyRecord) => [
+          comparisonOptionKey(item.label),
+          item,
+        ]),
+      );
+    }
+
+    const priceCriterion = comparisons.find((comparison) =>
+      /\b(price|cost|starting|starts at)\b/i.test(
+        `${comparison.title ?? ""} ${comparison.label ?? ""}`,
+      ),
+    );
+    const fitCriterion = comparisons.find((comparison) =>
+      /\b(best fit|best for|ideal|use case|who.*for)\b/i.test(
+        `${comparison.title ?? ""} ${comparison.label ?? ""}`,
+      ),
+    );
+    const prices = itemsByOption(priceCriterion);
+    const fits = itemsByOption(fitCriterion);
+    const recommendationSummaries = new Map<string, AnyRecord>();
+    for (const item of recommendationNode?.items ?? []) {
+      const option = options.find(
+        (candidate) => comparisonOptionKey(item.value) === candidate.key,
+      );
+      if (option) recommendationSummaries.set(option.key, item);
+    }
+    const recommendationItems = recommendationNode?.items ?? [];
+    const recommendationItem =
+      recommendationItems.length === 1 ? recommendationItems[0] : undefined;
+    const recommendationCopy = [
+      recommendationNode?.text,
+      recommendationItem?.detail,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .trim();
+    const recommendationValue = String(
+      recommendationItem?.value || recommendationNode?.value || "",
+    ).trim();
+    const recommendedKey =
+      options.find(
+        (option) =>
+          comparisonOptionKey(recommendationValue) === option.key ||
+          (!recommendationValue &&
+            new RegExp(
+              `\\b${option.label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`,
+              "i",
+            ).test(recommendationCopy)),
+      )?.key ?? selectedKey;
+    const pinnedKey = recommendedKey || options[0]?.key || "";
+    let challengerKey =
+      options.find((option) => option.key !== pinnedKey)?.key ?? pinnedKey;
+    let focusedKey = selectedKey || recommendedKey || pinnedKey;
+
+    function productMedia(option: (typeof options)[number]) {
+      const direct = currentMediaBySubject.get(option.key);
+      if (direct) return direct;
+      return [...currentMediaBySubject.entries()].find(
+        ([subject]) =>
+          subject.includes(option.key) || option.key.includes(subject),
+      )?.[1];
+    }
+
+    const mediaByOption = new Map(
+      options.map((option) => [option.key, productMedia(option)]),
+    );
+    const hasProductMedia = [...mediaByOption.values()].some(Boolean);
+
+    if (recommendationNode || recommendedKey) {
+      const decision = element("section", "gx-comparison-decision");
+      const answer = element("div", "gx-comparison-answer");
+      answer.append(
+        element(
+          "span",
+          "",
+          recommendationItem ? "Recommendation" : "Decision guide",
+        ),
+      );
+      answer.append(
+        element(
+          "strong",
+          "",
+          recommendationCopy ||
+            options.find((option) => option.key === recommendedKey)?.label ||
+            "Review the grounded tradeoffs below.",
+        ),
+      );
+      decision.append(answer);
+      for (const option of options) {
+        const summary = element(
+          "div",
+          `gx-comparison-decision-option${option.key === recommendedKey ? " is-recommended" : ""}`,
+        );
+        summary.append(
+          element(
+            "span",
+            "",
+            String(
+              recommendationSummaries.get(option.key)?.label ||
+                fits.get(option.key)?.value ||
+                "Compared option",
+            ),
+          ),
+        );
+        summary.append(
+          element(
+            "strong",
+            "",
+            [option.label, prices.get(option.key)?.value]
+              .filter(Boolean)
+              .join(" · "),
+          ),
+        );
+        decision.append(summary);
+      }
+      section.append(decision);
+    }
+
+    if (currentBlueprint === "compare-decide") {
+      const rail = element(
+        "div",
+        `gx-comparison-products${hasProductMedia ? " has-media" : ""}`,
+      );
+      rail.setAttribute("aria-label", "Compared options");
+      for (const option of options) {
+        const product = element("button", "gx-comparison-product");
+        product.type = "button";
+        product.dataset.optionKey = option.key;
+        product.setAttribute("aria-pressed", String(option.key === focusedKey));
+        product.setAttribute("aria-label", `Focus ${option.label}`);
+        const media = mediaByOption.get(option.key);
+        if (hasProductMedia) {
+          const frame = element("span", "gx-comparison-product-media");
+          const src = trustedImageSrc(media?.url);
+          if (src) {
+            const image = element("img");
+            image.src = src;
+            image.alt = String(media?.alt || option.label);
+            image.loading = "lazy";
+            image.decoding = "async";
+            image.referrerPolicy = "no-referrer";
+            frame.append(image);
+          } else {
+            frame.append(
+              element(
+                "span",
+                "gx-comparison-product-placeholder",
+                option.label.split(/\s+/)[0]?.toLocaleUpperCase() || "PRODUCT",
+              ),
+            );
+          }
+          product.append(frame);
+        }
+        const copy = element("span", "gx-comparison-product-copy");
+        copy.append(
+          element(
+            "small",
+            "",
+            option.key === recommendedKey
+              ? "Recommended"
+              : String(
+                  recommendationSummaries.get(option.key)?.label ||
+                    fits.get(option.key)?.value ||
+                    "Compared option",
+                ),
+          ),
+        );
+        const name = element("span", "gx-comparison-product-name");
+        name.append(element("strong", "", option.label));
+        if (prices.get(option.key)?.value)
+          name.append(element("b", "", String(prices.get(option.key)?.value)));
+        copy.append(name);
+        const detail = String(
+          recommendationSummaries.get(option.key)?.detail ||
+            fits.get(option.key)?.detail ||
+            "",
+        );
+        if (detail)
+          copy.append(element("span", "gx-comparison-product-detail", detail));
+        product.append(copy);
+        rail.append(product);
+      }
+      section.append(rail);
+
+      const detailsHead = element("div", "gx-comparison-details-head");
+      const detailsCopy = element("div");
+      detailsCopy.append(
+        element("h3", "", "Differences that change the decision"),
+        element(
+          "p",
+          "",
+          "Shared criteria stay aligned; supporting detail remains secondary.",
+        ),
+      );
+      detailsHead.append(
+        detailsCopy,
+        element(
+          "strong",
+          "",
+          `${options.length} products · ${comparisons.length} criteria`,
+        ),
+      );
+      section.append(detailsHead);
+    }
+
+    function chooseOption(key: string, persistChoice = selectable) {
+      focusedKey = key;
+      if (key !== pinnedKey) challengerKey = key;
+      if (persistChoice) {
+        for (const items of optionItems.values())
+          for (const item of items) state.selected.delete(String(item.id));
+        for (const item of optionItems.get(key) ?? [])
+          state.selected.add(String(item.id));
+      }
       section
         .querySelectorAll<HTMLElement>("[data-option-key]")
         .forEach((candidate) => {
@@ -240,11 +462,27 @@ export function runInformationUIWidget(initialSequence = 0) {
           if (candidate instanceof HTMLButtonElement) {
             candidate.setAttribute("aria-pressed", String(selected));
             const stateLabel = candidate.querySelector("small");
-            if (stateLabel)
+            if (stateLabel && candidate.classList.contains("gx-matrix-option"))
               stateLabel.textContent = selected ? "Selected" : "Select";
           }
         });
-      persist();
+      section
+        .querySelectorAll<HTMLElement>("[data-compact-option-key]")
+        .forEach((candidate) => {
+          const visible = [pinnedKey, challengerKey].includes(
+            String(candidate.dataset.compactOptionKey),
+          );
+          candidate.classList.toggle("is-compact-visible", visible);
+        });
+      section
+        .querySelectorAll<HTMLButtonElement>("[data-challenger-key]")
+        .forEach((button) =>
+          button.setAttribute(
+            "aria-pressed",
+            String(button.dataset.challengerKey === challengerKey),
+          ),
+        );
+      if (persistChoice) persist();
     }
 
     function optionHeader(option: (typeof options)[number], compact = false) {
@@ -269,11 +507,26 @@ export function runInformationUIWidget(initialSequence = 0) {
       return button;
     }
 
-    if (selectable) {
+    if (options.length > 1) {
       const focus = element("div", "gx-matrix-focus");
-      focus.append(element("span", "", "Choose an option"));
+      focus.append(element("span", "", "Compare against the default"));
       const controls = element("div", "gx-matrix-focus-options");
-      for (const option of options) controls.append(optionHeader(option, true));
+      const pinned = options.find((option) => option.key === pinnedKey)!;
+      for (const option of options) {
+        if (option.key === pinnedKey) continue;
+        const button = element("button", "gx-matrix-focus-option is-action");
+        button.type = "button";
+        button.dataset.challengerKey = option.key;
+        button.setAttribute(
+          "aria-pressed",
+          String(option.key === challengerKey),
+        );
+        button.append(
+          element("strong", "", `${pinned.label} vs ${option.label}`),
+        );
+        button.onclick = () => chooseOption(option.key, false);
+        controls.append(button);
+      }
       focus.append(controls);
       section.append(focus);
     }
@@ -313,7 +566,12 @@ export function runInformationUIWidget(initialSequence = 0) {
         const item = itemsByKey.get(option.key);
         const cell = element("article", "gx-matrix-cell");
         cell.dataset.optionKey = option.key;
+        cell.dataset.compactOptionKey = option.key;
         cell.classList.toggle("is-selected", selectedKey === option.key);
+        cell.classList.toggle(
+          "is-compact-visible",
+          [pinnedKey, challengerKey].includes(option.key),
+        );
         cell.append(
           element("span", "gx-matrix-cell-option", option.label),
           element("strong", "", String(item?.value || "Not available")),
@@ -324,6 +582,12 @@ export function runInformationUIWidget(initialSequence = 0) {
     }
     scroll.append(grid);
     section.append(scroll);
+    section
+      .querySelectorAll<HTMLButtonElement>(".gx-comparison-product")
+      .forEach((button) => {
+        button.onclick = () =>
+          chooseOption(String(button.dataset.optionKey || ""), selectable);
+      });
     return section;
   }
 
@@ -574,7 +838,7 @@ export function runInformationUIWidget(initialSequence = 0) {
     try {
       const url = new URL(String(value ?? ""));
       return url.protocol === "https:" &&
-        ["upload.wikimedia.org", "api.openverse.org"].includes(
+        ["upload.wikimedia.org", "api.openverse.org", "www.apple.com"].includes(
           url.hostname.toLowerCase(),
         )
         ? url.toString()
@@ -1005,13 +1269,79 @@ export function runInformationUIWidget(initialSequence = 0) {
       group.push(child);
       comparisonGroups.set(signature, group);
     }
+    const comparisonOptionKeys = new Set(
+      [...comparisonGroups.values()].flatMap((group) =>
+        (group[0]?.items ?? []).map((item: AnyRecord) =>
+          comparisonOptionKey(item.label),
+        ),
+      ),
+    );
+    const recommendationNode =
+      currentBlueprint === "compare-decide"
+        ? childNodes.find(
+            (child) =>
+              currentSlotRoles.get(String(child.slot)) === "recommendation",
+          )
+        : undefined;
+    const primaryComparisonSignature =
+      currentBlueprint === "compare-decide"
+        ? ([...comparisonGroups.entries()]
+            .map(([signature, group]) => ({
+              signature,
+              group,
+              score: group.reduce((total, comparison) => {
+                const title = String(
+                  comparison.title || comparison.label || "",
+                );
+                const contextualPenalty =
+                  /assumption|disambiguat|interpret|correction/i.test(title)
+                    ? 100
+                    : 0;
+                const criteriaBonus =
+                  /compar|price|cost|fit|performance|battery|trade-?off|spec/i.test(
+                    title,
+                  )
+                    ? 20
+                    : 0;
+                return (
+                  total +
+                  (comparison.items?.length ?? 0) * 4 +
+                  criteriaBonus -
+                  contextualPenalty
+                );
+              }, 0),
+            }))
+            .sort((left, right) => right.score - left.score)[0]?.signature ??
+          "")
+        : "";
     const renderedComparisonGroups = new Set<string>();
+
+    if (primaryComparisonSignature) {
+      const comparisons =
+        comparisonGroups.get(primaryComparisonSignature) ?? [];
+      renderedComparisonGroups.add(primaryComparisonSignature);
+      wrapper.append(
+        renderComparisonMatrix(comparisons, true, recommendationNode),
+      );
+    }
     childNodes.forEach((child, index) => {
+      if (child === recommendationNode) return;
+      if (
+        currentBlueprint === "compare-decide" &&
+        informationUISurfaceFamilyForType(String(child.type)) === "media" &&
+        comparisonOptionKeys.has(comparisonOptionKey(child.label))
+      )
+        return;
       const signature =
         informationUISurfaceFamilyForType(String(child.type)) === "comparison"
           ? comparisonSignature(child)
           : "";
       if (signature) {
+        if (
+          currentBlueprint === "compare-decide" &&
+          signature !== primaryComparisonSignature
+        )
+          return;
         if (renderedComparisonGroups.has(signature)) return;
         renderedComparisonGroups.add(signature);
         const comparisons = comparisonGroups.get(signature) ?? [child];
@@ -1021,6 +1351,7 @@ export function runInformationUIWidget(initialSequence = 0) {
             comparisons.some(
               (comparison) => comparison.importance === "primary",
             ) || index === 0,
+            recommendationNode,
           ),
         );
         return;
@@ -1138,6 +1469,11 @@ export function runInformationUIWidget(initialSequence = 0) {
         source,
       ]),
     );
+    currentMediaBySubject = new Map<string, AnyRecord>(
+      (envelope?.media ?? [])
+        .filter((media: AnyRecord) => media.subject)
+        .map((media: AnyRecord) => [comparisonOptionKey(media.subject), media]),
+    );
     currentSlotRoles = new Map<string, string>(
       (exp.representation?.slots ?? []).map((slot: AnyRecord) => [
         String(slot.id),
@@ -1148,6 +1484,7 @@ export function runInformationUIWidget(initialSequence = 0) {
     const blueprint = String(
       exp.representation?.blueprintIds?.[0] || "open-composition",
     );
+    currentBlueprint = blueprint;
     content.className = `gx-experience topology-${String(exp.representation?.topology || "editorial-stack")} blueprint-${blueprint}`;
     content.removeAttribute("aria-busy");
     const nodes = new Map<string, AnyRecord>(

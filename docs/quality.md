@@ -2,6 +2,17 @@
 
 Generative UI quality is not one score. Fify gates the model decision, semantic graph, trusted renderer, visual tokens, interactions, transport, and human judgment separately so one green layer cannot hide another layer's failure.
 
+The current portfolio is tracked in the generated [scenario quality matrix](scenario-quality-matrix.md). Each `scenarios/<id>/scenario.json` is the canonical contract and quality record; its adjacent `fixtures.json` holds the smallest useful prompt set.
+
+```bash
+pnpm scenario:new <scenario-id>
+pnpm scenario:check
+```
+
+`scenario:new` creates only those two files. `scenario:check` validates every contract, fixture, evidence reference, quality gate, and the generated matrix. After an observed quality update, regenerate the matrix with `pnpm scenario:check -- --write`.
+
+Start with [comparison](../scenarios/comparison/scenario.json) or [executive briefing](../scenarios/executive-briefing/scenario.json) as complete references. [Checklist](../scenarios/checklist/scenario.json) is the first baseline scenario intended to exercise the contributor workflow.
+
 ## Automated layers
 
 1. **Decision and graph semantics** — representation, obligation, exact-cardinality, minimum-sufficient-content, interaction-loop, and deterministic taste tests run in `@fify/core`.

@@ -26,6 +26,9 @@ const mediaSemanticIdSchema = z
 export const trustedInformationImageHosts = [
   "upload.wikimedia.org",
   "api.openverse.org",
+  "www.apple.com",
+  "www.oppo.com",
+  "www.sony.com",
 ] as const;
 
 function isSafePublicHttpsUrl(value: string) {
@@ -87,6 +90,7 @@ export const informationMediaV1Schema = z
     alt: z.string().min(1).max(180),
     caption: z.string().max(400),
     role: z.enum(["identity", "evidence", "illustration"]),
+    subject: z.string().min(1).max(90).optional(),
     sourceId: semanticIdSchema,
   })
   .strict();
@@ -151,6 +155,7 @@ function envelopeContentLength(
       media.alt,
       media.caption,
       media.role,
+      media.subject ?? "",
       media.sourceId,
     ]),
     ...value.sections.flatMap((section) => [
@@ -476,12 +481,36 @@ export function parseGroundedCompositionPlan(
   return plan;
 }
 
+function comparisonItemLabelSignature(
+  section: InformationEnvelopeV1["sections"][number],
+) {
+  if (section.items.length < 2 || section.items.length > 5) return "";
+  const labels = section.items.map((item) =>
+    item.label.trim().replace(/\s+/g, " ").toLocaleLowerCase(),
+  );
+  if (new Set(labels).size !== labels.length) return "";
+  return labels.join("|");
+}
+
 function defaultComponent(
   envelope: InformationEnvelopeV1,
   section: InformationEnvelopeV1["sections"][number],
   index: number,
 ) {
-  const text = `${envelope.originalRequest} ${section.title}`.toLowerCase();
+  const requestText = envelope.originalRequest.toLowerCase();
+  const sectionText = section.title.toLowerCase();
+  const text = `${requestText} ${sectionText}`;
+  const comparisonRequest = /compar|versus|\bvs\b|trade-?off/.test(requestText);
+  const sectionComparisonSignature = comparisonItemLabelSignature(section);
+  const repeatedComparisonSignature =
+    comparisonRequest &&
+    sectionComparisonSignature &&
+    (envelope.sections.length === 1 ||
+      envelope.sections.filter(
+        (candidate) =>
+          comparisonItemLabelSignature(candidate) ===
+          sectionComparisonSignature,
+      ).length >= 2);
   if (isExecutiveBriefingRequest(envelope.originalRequest)) {
     if (index === 0 && section.items.length <= 1) return "Hero";
     if (
@@ -492,6 +521,14 @@ function defaultComponent(
     if (section.items.length >= 2) return "FactList";
     return section.body ? "Text" : "Callout";
   }
+  if (
+    comparisonRequest &&
+    section.items.length >= 2 &&
+    /assumption|disambiguat|interpret|correction|recommend|verdict|guidance|which.*buy/.test(
+      sectionText,
+    )
+  )
+    return "FactList";
   if (
     section.items.length === 1 &&
     /\b(input|enter|field|editable)\b/.test(text)
@@ -524,7 +561,11 @@ function defaultComponent(
     return "Chart";
   if (/\b(map|locations?|places?|route)\b/.test(text)) return "MapPanel";
   if (/\b(calendar|schedule|agenda)\b/.test(text)) return "Calendar";
-  if (/compar|versus|\bvs\b|trade-?off/.test(text)) return "Comparison";
+  if (
+    repeatedComparisonSignature ||
+    /compar|versus|\bvs\b|trade-?off/.test(sectionText)
+  )
+    return "Comparison";
   if (/decision tool|choose|select|pick one|preference/.test(text))
     return "ChoiceGroup";
   if (/tabs?|categories|views?/.test(text)) return "Tabs";
@@ -651,15 +692,24 @@ function createRepresentation(
   const hasIdentityMedia = media.some((item) => item.role === "identity");
   const isExecutiveBriefing =
     !hasIdentityMedia && isExecutiveBriefingRequest(envelope.originalRequest);
+  const isComparison =
+    !hasIdentityMedia &&
+    !isExecutiveBriefing &&
+    plan.placements.some((placement) => placement.component === "Comparison");
   return representationPlanSchema.parse({
     version: "1.0",
-    mode: hasIdentityMedia || isExecutiveBriefing ? "blueprint" : "open",
+    mode:
+      hasIdentityMedia || isExecutiveBriefing || isComparison
+        ? "blueprint"
+        : "open",
     blueprintIds: [
       hasIdentityMedia
         ? "profile-reference"
         : isExecutiveBriefing
           ? "briefing"
-          : "open-composition",
+          : isComparison
+            ? "compare-decide"
+            : "open-composition",
     ],
     confidence: 1,
     userJob: envelope.originalRequest.slice(0, 160),
@@ -687,7 +737,7 @@ function createRepresentation(
           ? "compound"
           : "workflow",
     topology: plan.topology,
-    noveltyBudget: isExecutiveBriefing ? 0.35 : 0.5,
+    noveltyBudget: isExecutiveBriefing || isComparison ? 0.35 : 0.5,
     slots: [
       ...media.map((item, index) => ({
         id: `media-${index + 1}`,
@@ -705,13 +755,25 @@ function createRepresentation(
         id: groundedSectionSlotId(index),
         role: isExecutiveBriefing
           ? executiveBriefingRole(envelope.sections[index]!, index)
-          : index === 0
-            ? "primary"
-            : index === 1
-              ? "context"
-              : index === 2
-                ? "evidence"
-                : "exploration",
+          : isComparison
+            ? placement.component === "Comparison"
+              ? "criteria"
+              : placement.component === "ChoiceGroup"
+                ? "selection"
+                : /recommend|verdict|answer|summary/i.test(
+                      envelope.sections[index]!.title,
+                    )
+                  ? "recommendation"
+                  : index <= 1
+                    ? "context"
+                    : "evidence"
+            : index === 0
+              ? "primary"
+              : index === 1
+                ? "context"
+                : index === 2
+                  ? "evidence"
+                  : "exploration",
         shape: shapeForComponent(placement.component),
         priority: placement.importance,
         required: placement.importance === "primary",
@@ -749,7 +811,7 @@ export function compileGroundedInformationUI(
       variant: media.role === "identity" ? "portrait" : "landscape",
       title: media.alt.slice(0, 110),
       text: media.caption,
-      label: media.alt.slice(0, 80),
+      label: (media.subject ?? media.alt).slice(0, 80),
       value: media.url,
       meta: media.sourceId,
     }),
@@ -857,6 +919,8 @@ export function compileGroundedInformationUI(
     ],
   });
   const root = makeNode({ id: "root", type: "Page", children: [layout.id] });
+  const isComparisonRepresentation =
+    representation.blueprintIds[0] === "compare-decide";
   const experience = uiExperienceSchema.parse({
     version: "4.0",
     responseId,
@@ -866,7 +930,9 @@ export function compileGroundedInformationUI(
       title: envelope.sections[0]!.title.slice(0, 72),
       contextLabel: isExecutiveBriefingRequest(envelope.originalRequest)
         ? "Executive briefing"
-        : "Interactive answer",
+        : isComparisonRepresentation
+          ? "Comparison"
+          : "Interactive answer",
     },
     nodes: [
       root,

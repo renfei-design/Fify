@@ -138,6 +138,7 @@ describe("information UI widget replay", () => {
     expect(informationUIWidgetHtml).toContain("gx-visual-canvas");
     expect(informationUIWidgetHtml).toContain("upload.wikimedia.org");
     expect(informationUIWidgetHtml).toContain("api.openverse.org");
+    expect(informationUIWidgetHtml).toContain("www.apple.com");
     expect(informationUIWidgetHtml).toContain("topology-");
     expect(informationUIWidgetHtml).toContain("gx-media-copy");
     expect(informationUIWidgetHtml).toContain("Photo:");
@@ -162,8 +163,18 @@ describe("information UI widget replay", () => {
     expect(informationUIWidgetHtml).not.toContain("gx-supporting-grid");
     expect(informationUIWidgetHtml).toContain("comparisonSignature");
     expect(informationUIWidgetHtml).toContain("comparisonGroups");
+    expect(informationUIWidgetHtml).toContain("primaryComparisonSignature");
+    expect(informationUIWidgetHtml).toContain("contextualPenalty");
+    expect(informationUIWidgetHtml).toContain("recommendationSummaries");
+    expect(informationUIWidgetHtml).toContain("comparisonOptionLabel");
     expect(informationUIWidgetHtml).toContain("renderComparisonMatrix");
-    expect(informationUIWidgetHtml).toContain(" options · ");
+    expect(informationUIWidgetHtml).toContain("gx-comparison-decision");
+    expect(informationUIWidgetHtml).toContain("gx-comparison-products");
+    expect(informationUIWidgetHtml).toContain("gx-comparison-product-media");
+    expect(informationUIWidgetHtml).toContain("gx-comparison-details-head");
+    expect(informationUIWidgetHtml).toContain("data-compact-option-key");
+    expect(informationUIWidgetHtml).toContain("is-compact-visible");
+    expect(informationUIWidgetHtml).toContain(" products · ");
     expect(informationUIWidgetHtml).toContain("Not available");
     expect(informationUIWidgetHtml).toContain("overscroll-behavior-inline");
     expect(informationUIWidgetHtml).not.toContain("gx-comparison-rail");
@@ -179,7 +190,9 @@ describe("information UI widget replay", () => {
     expect(informationUIWidgetHtml).toContain(
       'element("button", `${className} is-action`)',
     );
-    expect(informationUIWidgetHtml).toContain("Choose an option");
+    expect(informationUIWidgetHtml).toContain(
+      'selected ? "Selected" : "Select"',
+    );
   });
 
   it("persists checked, selected, and input state for follow-up composition", () => {
@@ -194,6 +207,12 @@ describe("information UI widget replay", () => {
   it("uses a new MCP resource cache key for the richer renderer", () => {
     expect(informationUIWidgetHtml).toContain("renderMedia");
     expect(INFORMATION_UI_RESOURCE_URI).toBe(
+      "ui://fify/information-ui-v11.html",
+    );
+    expect(LEGACY_INFORMATION_UI_RESOURCE_URIS).toContain(
+      "ui://fify/information-ui-v10.html",
+    );
+    expect(LEGACY_INFORMATION_UI_RESOURCE_URIS).toContain(
       "ui://fify/information-ui-v9.html",
     );
     expect(LEGACY_INFORMATION_UI_RESOURCE_URIS).toContain(

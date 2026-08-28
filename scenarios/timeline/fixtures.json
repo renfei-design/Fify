@@ -1,0 +1,18 @@
+{
+  "version": "1.0",
+  "scenarioId": "timeline",
+  "cases": [
+    {
+      "id": "canonical-project-timeline",
+      "prompt": "Summarize these milestones as a timeline and call out dependencies and risks: discovery September 3, prototype September 12, security review September 18, pilot September 25. Show it with Fify.",
+      "canvas": "wide",
+      "expectedActivation": true
+    },
+    {
+      "id": "negative-activation",
+      "prompt": "Show the project history as a timeline.",
+      "canvas": "either",
+      "expectedActivation": false
+    }
+  ]
+}

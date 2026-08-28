@@ -1,0 +1,57 @@
+{
+  "version": "1.0",
+  "id": "decision-support",
+  "name": "Decision support",
+  "reviewedAt": "2026-08-27",
+  "contract": {
+    "userJob": "Evaluate evidence and criteria, then make a non-consequential choice without overstating certainty.",
+    "triggers": ["help me decide", "decision view", "recommend between"],
+    "exclusions": ["neutral comparison", "consequential external action"],
+    "roles": [
+      "recommendation",
+      "criterion",
+      "evidence",
+      "uncertainty",
+      "choice"
+    ],
+    "layout": {
+      "wide": "Lead with the bounded recommendation and keep criteria, evidence, and alternatives visible.",
+      "compact": "Stack recommendation, uncertainty, criteria, evidence, and selection in that order.",
+      "minimumItems": 2,
+      "maximumItems": 5
+    },
+    "interactions": ["select-option", "follow-up-refinement"],
+    "fallback": "Preserve the recommendation, criteria, evidence, alternatives, uncertainty, and sources."
+  },
+  "implementation": {
+    "blueprints": ["compare-decide"],
+    "components": ["ChoiceGroup", "Comparison", "FactList"]
+  },
+  "quality": {
+    "stage": "baseline",
+    "priority": "P1",
+    "scores": {
+      "contract": 3,
+      "visualParity": 2,
+      "canvas": 2,
+      "interactionFit": 2,
+      "runtime": 3
+    },
+    "evidence": {
+      "automated": "partial",
+      "deterministicPreview": "partial",
+      "installedCodex": "pass",
+      "humanReview": "fail"
+    },
+    "refs": [
+      "apps/mcp-app/src/server.integration.test.ts",
+      "plugins/fify/evals/reviewer-cases.json",
+      "packages/core/src/representation.test.ts"
+    ],
+    "gaps": [
+      "Recommendation, criteria, evidence, and selection are not yet composed into one coherent Fify decision workspace.",
+      "Interaction affordances can imply more authority than the grounded answer supports."
+    ],
+    "nextAction": "Define the decision contract and design an honest recommendation-to-selection flow."
+  }
+}

@@ -142,7 +142,13 @@ pnpm install
 pnpm codex:install
 ```
 
-Start a new Codex task after installation. Tag `@Fify` or explicitly ask for an interactive view; ordinary untagged requests remain standard Codex answers.
+The installer now refuses to replace the active plugin while the ChatGPT/Codex desktop MCP host is running. Fully quit the app with Command-Q, run the install from Terminal, then reopen it. Opening a new task alone does not restart the long-lived MCP host. Then verify the real host boundary:
+
+```bash
+pnpm codex:verify-host
+```
+
+The preflight rejects a desktop MCP host that predates the installed plugin and verifies the exact six-section, three-image comparison shape in a separate fresh Codex process. It is necessary but not final acceptance: tag `@Fify` in a brand-new desktop task and require the native widget to mount. Resuming a task created before installation keeps its old tool snapshot. Ordinary untagged requests remain standard Codex answers.
 
 The local plugin works without an end-user provider key because Codex supplies the grounded answer and the bundled server has a trusted deterministic composer. Named real-person profiles resolve an attributed portrait through a bounded Wikimedia lookup unless the user requests no image. A service operator may optionally configure a provider key for model-selected composition.
 

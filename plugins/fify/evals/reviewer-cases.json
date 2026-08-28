@@ -1,14 +1,16 @@
 {
   "positive": [
     {
-      "name": "Compare SaaS rollout options",
-      "prompt": "Compare pilot, phased, and company-wide rollout options by cost, implementation risk, learning speed, and time to value. Then use Fify to make the comparison interactive.",
-      "expected": "ChatGPT completes the factual comparison first, calls render_information_ui once, and displays a selectable comparison view while retaining the plain answer and sources.",
-      "fixture": "No account or external fixture. Use the three options named in the prompt and clearly label any assumptions.",
+      "name": "Compare products with images",
+      "prompt": "@Fify compare MacBook Neo, MacBook Air, and MacBook Pro by starting price, best fit, memory, battery life, and tradeoffs. Use official product images when available.",
+      "expected": "ChatGPT completes the grounded comparison first, calls render_information_ui once, and displays the compare-decide experience: a decision-first summary, recognizable product rail with attributed official imagery when supported, aligned criteria, and compact challenger focus. The complete plain answer and sources remain available.",
+      "fixture": "No account fixture. Use current official Apple product pages for supported imagery and current product facts; omit any image that cannot be attributed or fetched safely.",
       "successCriteria": [
-        "Three options remain identifiable",
-        "Cost and risk tradeoffs match the answer",
-        "At least one selection control is usable",
+        "All three products remain identifiable",
+        "Prices, best-fit guidance, memory, battery life, and tradeoffs match the grounded answer",
+        "Product imagery is attributed and matched to the correct option, or is honestly omitted",
+        "Compact mode keeps one default option visible while allowing challenger focus",
+        "At least one focus or selection control is usable",
         "The plain answer remains available"
       ]
     },

@@ -1,0 +1,60 @@
+{
+  "version": "1.0",
+  "id": "comparison",
+  "name": "Comparison",
+  "reviewedAt": "2026-08-27",
+  "contract": {
+    "userJob": "Compare two to five options against shared criteria, recognize each option immediately, and understand which tradeoffs change the decision.",
+    "triggers": ["compare", "contrast", "choose between"],
+    "exclusions": [
+      "single-subject profile",
+      "evidence-led recommendation without comparable options"
+    ],
+    "roles": ["recommendation", "option-identity", "criterion", "selection"],
+    "layout": {
+      "wide": "Lead with a grounded recommendation when supplied, show a stable option rail with attributed imagery when available, then align shared criteria in one contained matrix.",
+      "compact": "Keep the option rail horizontally contained, pin the grounded recommendation or first option, and compare one challenger at a time without page-level overflow.",
+      "minimumItems": 2,
+      "maximumItems": 5
+    },
+    "interactions": [
+      "focus-challenger",
+      "select-option",
+      "follow-up-refinement"
+    ],
+    "media": "Product imagery is optional, attributed, matched through media.subject to the exact option label, and omitted honestly when unavailable.",
+    "fallback": "Preserve the complete grounded comparison, criteria, uncertainty, and sources."
+  },
+  "implementation": {
+    "blueprints": ["compare-decide"],
+    "components": ["Comparison", "Image", "ChoiceGroup"]
+  },
+  "quality": {
+    "stage": "baseline",
+    "priority": "P0",
+    "scores": {
+      "contract": 4,
+      "visualParity": 4,
+      "canvas": 4,
+      "interactionFit": 4,
+      "runtime": 4
+    },
+    "evidence": {
+      "automated": "pass",
+      "deterministicPreview": "pass",
+      "installedCodex": "pending",
+      "humanReview": "pending"
+    },
+    "refs": [
+      "apps/mcp-app/scripts/comparison-preview.mjs",
+      "apps/mcp-app/src/server.integration.test.ts",
+      "apps/mcp-app/src/widget.test.ts",
+      "packages/core/src/grounded.test.ts"
+    ],
+    "gaps": [
+      "The running desktop MCP host predates the installed bundle and must be fully restarted; reopening a window or resuming the same task does not refresh MCP tools.",
+      "Fresh desktop acceptance must confirm that six-section comparisons with three product images mount without representation-slot fallback."
+    ],
+    "nextAction": "Fully quit and reopen ChatGPT/Codex, pass the nine-slot pnpm codex:verify-host preflight, rerun the MacBook Air, Neo, and Pro comparison in a brand-new task, and record human acceptance."
+  }
+}

@@ -15,8 +15,10 @@ The ChatGPT/Codex adapter shares semantic surface families and theme tokens with
 ## Local installation
 
 1. Install workspace dependencies.
-2. Run `pnpm codex:install`. It builds a portable production-only MCP deployment inside the ignored `plugins/fify/server` directory, validates the plugin contract, adds the repository marketplace, and installs Fify.
-3. Start a new Codex task and try the prompts in `plugins/fify/README.md`, then exercise the positive and negative activation prompts in `plugins/fify/evals/activation.json`.
+2. Fully quit ChatGPT/Codex with Command-Q, then run `pnpm codex:install` from Terminal. The installer refuses to replace Fify while the desktop MCP host is running. It builds a portable production-only MCP deployment inside the ignored `plugins/fify/server` directory, validates the plugin contract, adds the repository marketplace, and installs Fify.
+3. Reopen ChatGPT/Codex. Opening a new task without restarting does not refresh the long-lived MCP host.
+4. Run `pnpm codex:verify-host`. It must reject any desktop MCP host older than the installed bundle and complete the exact six-section, three-image comparison through `render_information_ui`.
+5. Start a brand-new tagged Codex desktop task and require the native widget to mount before recording installed acceptance. Never reuse a task created before installation because its MCP tool snapshot remains stale. Then try the prompts in `plugins/fify/README.md` and exercise the positive and negative activation prompts in `plugins/fify/evals/activation.json`.
 
 The bundled stdio server works without a provider key because the host supplies the grounded answer and the server has a trusted deterministic composer. Profile portrait lookup contacts only the English Wikipedia and Wikimedia Commons APIs and can be disabled with `FIFY_PROFILE_MEDIA_LOOKUP=0`. A local or hosted operator can optionally set `OPENAI_API_KEY`, `FIFY_COMPOSER_MODEL`, and a private `FIFY_QUOTA_SALT`; never place a provider key in the plugin bundle or request one from an end user. A public directory entry can point the same plugin contract at a hosted MCP endpoint.
 

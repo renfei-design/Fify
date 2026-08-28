@@ -1,0 +1,24 @@
+{
+  "version": "1.0",
+  "scenarioId": "checklist",
+  "cases": [
+    {
+      "id": "canonical-launch-checklist",
+      "prompt": "Create a launch checklist for a small public beta covering product readiness, privacy, support, analytics, and rollback. Use Fify so I can work through it.",
+      "canvas": "wide",
+      "expectedActivation": true
+    },
+    {
+      "id": "compact-launch-checklist",
+      "prompt": "@Fify make a compact checklist for privacy review, support readiness, analytics, and rollback.",
+      "canvas": "compact",
+      "expectedActivation": true
+    },
+    {
+      "id": "negative-activation",
+      "prompt": "Turn this launch plan into an editable checklist.",
+      "canvas": "either",
+      "expectedActivation": false
+    }
+  ]
+}

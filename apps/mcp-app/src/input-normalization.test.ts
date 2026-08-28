@@ -73,4 +73,69 @@ describe("presentation ID normalization", () => {
 
     expect(normalized.value.suggestedRefinements).toEqual(["One", "Two"]);
   });
+
+  it("drops malformed optional media without changing authoritative content", () => {
+    const input = {
+      ...envelope(),
+      media: [
+        {
+          id: "unsafe-product",
+          url: "https://images.example.com/product.jpg",
+          alt: "A product",
+          caption: "Optional product image",
+          role: "product",
+          subject: "Product",
+          sourceId: "guide",
+        },
+      ],
+    };
+
+    const normalized = normalizePresentationInput(input);
+
+    expect(normalized.value.media).toEqual([]);
+    expect(normalized.value.groundedAnswer).toBe(input.groundedAnswer);
+    expect(normalized.value.sections[0]).toMatchObject({
+      title: input.sections[0]!.title,
+      body: input.sections[0]!.body,
+      items: input.sections[0]!.items,
+    });
+    expect(normalized.mediaDiagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ action: "repaired" }),
+        expect.objectContaining({
+          action: "dropped",
+          message: expect.stringContaining("approved public HTTPS image host"),
+        }),
+      ]),
+    );
+  });
+
+  it("maps product media to illustration and retains supported official images", () => {
+    const input = {
+      ...envelope(),
+      media: [
+        {
+          id: "official-product",
+          url: "https://www.sony.com/images/product.jpg",
+          alt: "A supported product",
+          caption: "Official product image",
+          role: "product",
+          subject: "Product",
+          sourceId: "guide",
+        },
+      ],
+    };
+
+    const normalized = normalizePresentationInput(input);
+
+    expect(normalized.value.media).toEqual([
+      expect.objectContaining({
+        id: "official-product",
+        role: "illustration",
+      }),
+    ]);
+    expect(normalized.mediaDiagnostics).toEqual([
+      expect.objectContaining({ action: "repaired" }),
+    ]);
+  });
 });

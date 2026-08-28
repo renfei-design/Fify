@@ -1,0 +1,50 @@
+{
+  "version": "1.0",
+  "id": "analysis-evidence",
+  "name": "Analysis and evidence",
+  "reviewedAt": "2026-08-27",
+  "contract": {
+    "userJob": "Understand a conclusion, its evidence, the method, and the limits of the analysis.",
+    "triggers": ["analyze", "evidence", "what does the data show"],
+    "exclusions": ["live monitoring", "executive decision brief"],
+    "roles": ["conclusion", "evidence", "method", "caveat"],
+    "layout": {
+      "wide": "Lead with the conclusion, then align evidence and method with visible caveats.",
+      "compact": "Stack conclusion, evidence, caveats, and method while containing dense tables and charts.",
+      "minimumItems": 1,
+      "maximumItems": 12
+    },
+    "interactions": ["filter", "disclosure", "follow-up-refinement"],
+    "fallback": "Preserve conclusions, evidence, methods, caveats, exact values, and sources."
+  },
+  "implementation": {
+    "blueprints": ["analysis-evidence"],
+    "components": ["Metric", "Chart", "Table", "FactList", "Callout"]
+  },
+  "quality": {
+    "stage": "baseline",
+    "priority": "P2",
+    "scores": {
+      "contract": 2,
+      "visualParity": 2,
+      "canvas": 2,
+      "interactionFit": 2,
+      "runtime": 3
+    },
+    "evidence": {
+      "automated": "partial",
+      "deterministicPreview": "partial",
+      "installedCodex": "pending",
+      "humanReview": "pending"
+    },
+    "refs": [
+      "packages/core/src/representation.ts",
+      "packages/evals/src/comprehension-cases.ts"
+    ],
+    "gaps": [
+      "Conclusion, evidence, method, and caveats are not yet given stable visual priority.",
+      "Charts remain generic and require scenario-level legibility review."
+    ],
+    "nextAction": "Define an evidence-first analysis layout and validate chart/table density at all release viewports."
+  }
+}

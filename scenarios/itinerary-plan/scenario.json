@@ -1,0 +1,50 @@
+{
+  "version": "1.0",
+  "id": "itinerary-plan",
+  "name": "Itinerary and plan",
+  "reviewedAt": "2026-08-27",
+  "contract": {
+    "userJob": "Follow and refine a time-bound plan while seeing routes, constraints, and conflicts.",
+    "triggers": ["itinerary", "day-by-day plan", "schedule I can refine"],
+    "exclusions": ["historical timeline", "undated checklist"],
+    "roles": ["day", "scheduled-item", "route", "constraint", "conflict"],
+    "layout": {
+      "wide": "Group scheduled items by day with route and constraint context nearby.",
+      "compact": "Stack days and events chronologically with conflicts visible before optional detail.",
+      "minimumItems": 1,
+      "maximumItems": 7
+    },
+    "interactions": ["select-item", "toggle-task", "follow-up-refinement"],
+    "fallback": "Preserve the complete plan, dates, constraints, conflicts, and sources."
+  },
+  "implementation": {
+    "blueprints": ["plan-schedule"],
+    "components": ["Steps", "Calendar", "MapPanel", "Checklist"]
+  },
+  "quality": {
+    "stage": "verified",
+    "priority": "P3",
+    "scores": {
+      "contract": 4,
+      "visualParity": 4,
+      "canvas": 3,
+      "interactionFit": 4,
+      "runtime": 3
+    },
+    "evidence": {
+      "automated": "partial",
+      "deterministicPreview": "partial",
+      "installedCodex": "pass",
+      "humanReview": "pass"
+    },
+    "refs": [
+      "apps/mcp-app/scripts/interaction-preview.mjs",
+      "plugins/fify/evals/reviewer-cases.json",
+      "packages/evals/src/comprehension-cases.ts"
+    ],
+    "gaps": [
+      "Add dedicated multi-day scale fixtures and constraint-conflict visual checks."
+    ],
+    "nextAction": "Cover two-day through seven-day plans with route, conflict, and compact-canvas fixtures."
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "version": "1.0",
+  "id": "timeline",
+  "name": "Timeline and chronology",
+  "reviewedAt": "2026-08-27",
+  "contract": {
+    "userJob": "Understand an ordered sequence of events, phases, dependencies, and changes over time.",
+    "triggers": ["timeline", "chronology", "history over time"],
+    "exclusions": ["dated itinerary", "unordered profile facts"],
+    "roles": ["period", "event", "date", "dependency"],
+    "layout": {
+      "wide": "Align dates and events on a readable chronological rail with phase grouping.",
+      "compact": "Stack events chronologically while retaining dates and dependency context.",
+      "minimumItems": 2,
+      "maximumItems": 20
+    },
+    "interactions": ["follow-up-refinement"],
+    "fallback": "Preserve every grounded date, event, dependency, risk, and source."
+  },
+  "implementation": {
+    "blueprints": ["plan-schedule", "open-composition"],
+    "components": ["Timeline"]
+  },
+  "quality": {
+    "stage": "verified",
+    "priority": "P3",
+    "scores": {
+      "contract": 4,
+      "visualParity": 4,
+      "canvas": 3,
+      "interactionFit": 3,
+      "runtime": 3
+    },
+    "evidence": {
+      "automated": "partial",
+      "deterministicPreview": "partial",
+      "installedCodex": "pass",
+      "humanReview": "pass"
+    },
+    "refs": [
+      "apps/mcp-app/src/widget.test.ts",
+      "plugins/fify/evals/reviewer-cases.json"
+    ],
+    "gaps": [
+      "Add a dedicated wide and compact timeline preview with maximum event density."
+    ],
+    "nextAction": "Add deterministic timeline density and compact-order regression coverage."
+  }
+}

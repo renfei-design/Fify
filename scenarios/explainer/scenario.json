@@ -1,0 +1,50 @@
+{
+  "version": "1.0",
+  "id": "explainer",
+  "name": "Explainer",
+  "reviewedAt": "2026-08-27",
+  "contract": {
+    "userJob": "Understand how or why something works through a clear model, example, and implication.",
+    "triggers": ["explain how", "explain why", "help me understand"],
+    "exclusions": ["single fact", "ordered procedure"],
+    "roles": ["thesis", "model", "example", "implication"],
+    "layout": {
+      "wide": "Lead with the thesis and use supporting sections with visibly different roles.",
+      "compact": "Stack thesis, model, example, and implication without equal-weight card repetition.",
+      "minimumItems": 1,
+      "maximumItems": 6
+    },
+    "interactions": ["follow-up-refinement"],
+    "fallback": "Preserve the complete explanation, caveats, examples, and sources."
+  },
+  "implementation": {
+    "blueprints": ["explainer"],
+    "components": ["Hero", "Text", "FactList", "Steps", "Visual"]
+  },
+  "quality": {
+    "stage": "baseline",
+    "priority": "P2",
+    "scores": {
+      "contract": 2,
+      "visualParity": 2,
+      "canvas": 2,
+      "interactionFit": 2,
+      "runtime": 3
+    },
+    "evidence": {
+      "automated": "partial",
+      "deterministicPreview": "partial",
+      "installedCodex": "pending",
+      "humanReview": "pending"
+    },
+    "refs": [
+      "packages/core/src/representation.ts",
+      "apps/mcp-app/src/widget-client.ts"
+    ],
+    "gaps": [
+      "No approved scenario contract or dedicated comprehension hierarchy exists.",
+      "The generic composition can become a stack of similarly weighted sections."
+    ],
+    "nextAction": "Choose a canonical how-or-why prompt and define thesis, model, example, and implication roles."
+  }
+}

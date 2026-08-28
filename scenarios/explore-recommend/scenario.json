@@ -1,0 +1,64 @@
+{
+  "version": "1.0",
+  "id": "explore-recommend",
+  "name": "Explore and recommend",
+  "reviewedAt": "2026-08-27",
+  "contract": {
+    "userJob": "Explore several choices, understand why they fit, and narrow the set confidently.",
+    "triggers": ["recommend", "show me options", "help me explore"],
+    "exclusions": [
+      "fixed-option comparison",
+      "authoritative consequential decision"
+    ],
+    "roles": [
+      "featured-choice",
+      "collection",
+      "fit-reason",
+      "filter",
+      "detail"
+    ],
+    "layout": {
+      "wide": "Feature one grounded match while keeping the collection and filters easy to scan.",
+      "compact": "Stack the featured choice, filters, and collection with progressive detail.",
+      "minimumItems": 3,
+      "maximumItems": 20
+    },
+    "interactions": [
+      "filter",
+      "select-option",
+      "disclosure",
+      "follow-up-refinement"
+    ],
+    "fallback": "Preserve all recommendations, fit reasons, constraints, uncertainty, and sources."
+  },
+  "implementation": {
+    "blueprints": ["explore-recommend"],
+    "components": ["Card", "Tabs", "ChoiceGroup", "Comparison", "Image"]
+  },
+  "quality": {
+    "stage": "baseline",
+    "priority": "P2",
+    "scores": {
+      "contract": 2,
+      "visualParity": 1,
+      "canvas": 2,
+      "interactionFit": 2,
+      "runtime": 3
+    },
+    "evidence": {
+      "automated": "partial",
+      "deterministicPreview": "none",
+      "installedCodex": "pending",
+      "humanReview": "pending"
+    },
+    "refs": [
+      "packages/core/src/representation.ts",
+      "apps/mcp-app/src/widget-client.ts"
+    ],
+    "gaps": [
+      "Featured choice, collection, filters, comparison, and details lack a scalable browsing model.",
+      "Trusted media behavior beyond person profiles needs scenario-level evidence."
+    ],
+    "nextAction": "Define a three-to-many recommendation browsing contract with honest media and comparison behavior."
+  }
+}

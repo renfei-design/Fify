@@ -113,6 +113,10 @@ export const responseScaleSchema = z.enum([
 ]);
 export const responseRoleSchema = z.enum(responseRoleIds);
 
+// InformationEnvelopeV1 permits up to eight grounded sections and four media
+// records. Representation capacity must cover that full legal input surface.
+export const maxRepresentationSlots = 12;
+
 export const representationSlotSchema = z
   .object({
     id: z
@@ -139,7 +143,10 @@ export const representationPlanBaseSchema = z
     scale: responseScaleSchema,
     topology: layoutTopologySchema,
     noveltyBudget: z.number().min(0).max(1),
-    slots: z.array(representationSlotSchema).min(1).max(8),
+    slots: z
+      .array(representationSlotSchema)
+      .min(1)
+      .max(maxRepresentationSlots),
   })
   .strict();
 

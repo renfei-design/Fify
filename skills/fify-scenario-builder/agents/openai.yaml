@@ -1,0 +1,4 @@
+interface:
+  display_name: "Fify Scenario Builder"
+  short_description: "Design and ship one Fify scenario end to end"
+  default_prompt: "Use $fify-scenario-builder to design and implement the next Fify information-view scenario."

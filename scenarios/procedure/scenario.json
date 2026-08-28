@@ -1,0 +1,49 @@
+{
+  "version": "1.0",
+  "id": "procedure",
+  "name": "Procedure and how-to",
+  "reviewedAt": "2026-08-27",
+  "contract": {
+    "userJob": "Complete an ordered task safely with prerequisites, cautions, and visible stop conditions.",
+    "triggers": ["how do I", "step by step", "procedure"],
+    "exclusions": ["stateful checklist", "external action execution"],
+    "roles": ["prerequisite", "caution", "step", "completion-check"],
+    "layout": {
+      "wide": "Keep prerequisites and cautions before ordered steps and completion checks.",
+      "compact": "Use one ordered column and keep cautions adjacent to the affected step.",
+      "minimumItems": 2,
+      "maximumItems": 15
+    },
+    "interactions": ["follow-up-refinement"],
+    "fallback": "Preserve every prerequisite, caution, ordered step, and completion check."
+  },
+  "implementation": {
+    "blueprints": ["procedure"],
+    "components": ["Steps", "Checklist", "Callout"]
+  },
+  "quality": {
+    "stage": "baseline",
+    "priority": "P2",
+    "scores": {
+      "contract": 2,
+      "visualParity": 2,
+      "canvas": 2,
+      "interactionFit": 2,
+      "runtime": 3
+    },
+    "evidence": {
+      "automated": "partial",
+      "deterministicPreview": "partial",
+      "installedCodex": "pending",
+      "humanReview": "pending"
+    },
+    "refs": [
+      "packages/core/src/representation.ts",
+      "packages/evals/src/comprehension-cases.ts"
+    ],
+    "gaps": [
+      "Prerequisites, cautions, ordered steps, and completion checks lack a dedicated visual contract."
+    ],
+    "nextAction": "Design a safety-aware procedure view with ordered actions and visible stop conditions."
+  }
+}

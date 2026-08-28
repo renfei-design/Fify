@@ -1,0 +1,50 @@
+{
+  "version": "1.0",
+  "id": "interactive-tool",
+  "name": "Interactive tool",
+  "reviewedAt": "2026-08-27",
+  "contract": {
+    "userJob": "Enter bounded assumptions and inspect a transparent computed result.",
+    "triggers": ["calculator", "interactive tool", "what if"],
+    "exclusions": ["open-ended analysis", "external mutation"],
+    "roles": ["input", "assumption", "result", "validation", "follow-up"],
+    "layout": {
+      "wide": "Keep inputs and assumptions adjacent to the result and its explanation.",
+      "compact": "Stack inputs, validation, result, and explanation in execution order.",
+      "minimumItems": 1,
+      "maximumItems": 10
+    },
+    "interactions": ["input", "select-option", "follow-up-refinement"],
+    "fallback": "Preserve inputs, assumptions, formula or method, result, limitations, and sources."
+  },
+  "implementation": {
+    "blueprints": ["interactive-tool"],
+    "components": ["Input", "ChoiceGroup", "Metric", "Table"]
+  },
+  "quality": {
+    "stage": "baseline",
+    "priority": "P2",
+    "scores": {
+      "contract": 2,
+      "visualParity": 2,
+      "canvas": 2,
+      "interactionFit": 2,
+      "runtime": 3
+    },
+    "evidence": {
+      "automated": "partial",
+      "deterministicPreview": "partial",
+      "installedCodex": "pending",
+      "humanReview": "pending"
+    },
+    "refs": [
+      "apps/mcp-app/scripts/interaction-preview.mjs",
+      "packages/core/src/representation.ts"
+    ],
+    "gaps": [
+      "Input, assumptions, computed result, and continuation are not yet composed as one trustworthy tool.",
+      "No scenario-specific validation covers empty, invalid, and boundary inputs."
+    ],
+    "nextAction": "Choose one bounded calculator scenario and define its input, result, validation, and follow-up contract."
+  }
+}

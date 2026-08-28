@@ -65,7 +65,7 @@ try {
   assert.ok(renderer, "The bundled server must expose render_information_ui.");
   assert.equal(
     renderer._meta?.ui?.resourceUri,
-    "ui://fify/information-ui-v9.html",
+    "ui://fify/information-ui-v11.html",
   );
   const readyAt = performance.now();
 
@@ -102,16 +102,158 @@ try {
         },
       ],
       sources: [],
+      media: [
+        {
+          url: "https://images.example.com/unsupported-product.jpg",
+          role: "product",
+        },
+      ],
       suggestedRefinements: [],
     },
   });
   const renderedAt = performance.now();
   assert.notEqual(result.isError, true);
   assert.equal(result.structuredContent?.state, "complete");
+  assert.match(
+    String(result.structuredContent?.diagnostic),
+    /media\.0: dropped/,
+    "Invalid optional media must degrade independently of the interactive view.",
+  );
   assert.ok(
     Array.isArray(result.structuredContent?.frames) &&
       result.structuredContent.frames.length > 0,
     "The bundled renderer must return UI frames.",
+  );
+
+  const productOptions = [
+    "OPPO Enco Free",
+    "Sony LinkBuds",
+    "Apple AirPods Pro 3",
+  ];
+  const productSources = [
+    {
+      id: "oppo",
+      title: "OPPO Enco Free",
+      url: "https://www.oppo.com/en/newsroom/stories/5-compelling-features-of-oppo-enco-free-tws-headphones/",
+    },
+    {
+      id: "sony",
+      title: "Sony LinkBuds",
+      url: "https://www.sony.com/en/SonyInfo/design/stories/linkbuds/",
+    },
+    {
+      id: "apple",
+      title: "Apple AirPods Pro 3",
+      url: "https://www.apple.com/airpods-pro/specs/",
+    },
+  ];
+  const productSourceIds = productSources.map((source) => source.id);
+  const productCriterion = (id, title, values) => ({
+    id,
+    title,
+    body: `${title} comparison.`,
+    sourceIds: productSourceIds,
+    items: productOptions.map((label, index) => ({
+      id: `${id}-${index + 1}`,
+      label,
+      value: values[index],
+      detail: `${title} detail for ${label}.`,
+      sourceIds: [productSourceIds[index]],
+    })),
+  });
+  const productComparison = await client.callTool({
+    name: "render_information_ui",
+    arguments: {
+      version: "1.0",
+      originalRequest:
+        "Compare Vivo Encore Free, Sony LindBuds, and Apple Airpod pro",
+      groundedAnswer:
+        "AirPods Pro 3 are the best overall choice; LinkBuds prioritize awareness; Enco Free is a legacy bargain.",
+      locale: "en",
+      sources: productSources,
+      media: [
+        {
+          id: "oppo-product",
+          role: "product",
+          subject: "OPPO Enco Free",
+          alt: "OPPO Enco Free earbuds",
+          caption: "OPPO Enco Free",
+          sourceId: "oppo",
+          url: "https://www.oppo.com/content/dam/oppo/en/mkt/newsroom/story/5-compelling-features-of-oppo-enco-free-tws-headphones/main.jpg",
+        },
+        {
+          id: "sony-product",
+          role: "product",
+          subject: "Sony LinkBuds",
+          alt: "Sony LinkBuds",
+          caption: "Sony LinkBuds",
+          sourceId: "sony",
+          url: "https://www.sony.com/en/SonyInfo/design/stories/linkbuds/img/06.jpg",
+        },
+        {
+          id: "apple-product",
+          role: "product",
+          subject: "Apple AirPods Pro 3",
+          alt: "Apple AirPods Pro 3",
+          caption: "Apple AirPods Pro 3",
+          sourceId: "apple",
+          url: "https://www.apple.com/v/airpods-pro/s/images/specs/airpods__eqrzs6rwhu2q_large.jpg",
+        },
+      ],
+      sections: [
+        productCriterion("verdict", "Verdict", [
+          "Legacy bargain",
+          "Best for awareness",
+          "Best overall",
+        ]),
+        productCriterion("fit", "Fit", [
+          "Semi-open",
+          "Open ring",
+          "Sealed in-ear",
+        ]),
+        productCriterion("noise-control", "Noise control", [
+          "No playback ANC",
+          "No ANC by design",
+          "ANC + Adaptive Audio",
+        ]),
+        productCriterion("battery", "Battery", [
+          "5 h",
+          "5.5 h",
+          "8 h with ANC",
+        ]),
+        productCriterion("ecosystem", "Ecosystem", [
+          "Android + iOS",
+          "Cross-platform",
+          "Best inside Apple",
+        ]),
+        productCriterion("durability", "Durability", [
+          "IPX4 earbuds",
+          "IPX4 earbuds",
+          "IP57 earbuds + case",
+        ]),
+      ],
+      suggestedRefinements: [],
+    },
+  });
+  assert.notEqual(productComparison.isError, true);
+  assert.equal(productComparison.structuredContent?.state, "complete");
+  assert.match(
+    String(productComparison.structuredContent?.diagnostic),
+    /Mapped presentation role 'product' to 'illustration'/,
+  );
+  const productComplete = productComparison.structuredContent?.frames?.find(
+    (frame) => frame.type === "complete",
+  );
+  assert.deepEqual(
+    productComplete?.experience?.representation?.blueprintIds,
+    ["compare-decide"],
+  );
+  assert.equal(productComplete?.experience?.representation?.slots?.length, 9);
+  assert.equal(
+    productComplete?.experience?.nodes?.filter((node) =>
+      String(node.id).startsWith("media-"),
+    ).length,
+    3,
   );
 
   const briefing = await client.callTool({
@@ -186,10 +328,9 @@ try {
   const briefingComplete = briefing.structuredContent?.frames?.find(
     (frame) => frame.type === "complete",
   );
-  assert.deepEqual(
-    briefingComplete?.experience?.representation?.blueprintIds,
-    ["briefing"],
-  );
+  assert.deepEqual(briefingComplete?.experience?.representation?.blueprintIds, [
+    "briefing",
+  ]);
   assert.equal(
     briefingComplete?.experience?.screen?.contextLabel,
     "Executive briefing",

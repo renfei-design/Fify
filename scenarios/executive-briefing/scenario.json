@@ -1,0 +1,58 @@
+{
+  "version": "1.0",
+  "id": "executive-briefing",
+  "name": "Executive briefing",
+  "reviewedAt": "2026-08-27",
+  "contract": {
+    "userJob": "Understand operating signals, make the required decision, and assign the next actions quickly.",
+    "triggers": [
+      "executive briefing",
+      "leadership brief",
+      "signals decision risks and actions"
+    ],
+    "exclusions": [
+      "general analysis without a decision",
+      "multi-option comparison"
+    ],
+    "roles": ["headline", "signal", "decision", "risk", "next-action"],
+    "layout": {
+      "wide": "Lead with the conclusion, then separate signals, decision, risks, and owned next actions.",
+      "compact": "Place the decision before supporting findings and keep owners and deadlines adjacent to actions.",
+      "minimumItems": 1,
+      "maximumItems": 8
+    },
+    "interactions": ["follow-up-refinement"],
+    "fallback": "Preserve exact signals, recommendation, owner, deadline, risks, unknowns, and sources."
+  },
+  "implementation": {
+    "blueprints": ["briefing"],
+    "components": ["Hero", "FactList", "Steps"]
+  },
+  "quality": {
+    "stage": "candidate",
+    "priority": "P0",
+    "scores": {
+      "contract": 4,
+      "visualParity": 4,
+      "canvas": 4,
+      "interactionFit": 3,
+      "runtime": 4
+    },
+    "evidence": {
+      "automated": "pass",
+      "deterministicPreview": "pass",
+      "installedCodex": "pass",
+      "humanReview": "pending"
+    },
+    "refs": [
+      "apps/mcp-app/scripts/briefing-preview.mjs",
+      "apps/mcp-app/src/server.integration.test.ts",
+      "apps/mcp-app/src/widget.test.ts",
+      "packages/evals/src/comprehension-cases.ts"
+    ],
+    "gaps": [
+      "Fresh Codex acceptance is pending for the canonical executive operating brief and its follow-up refinement."
+    ],
+    "nextAction": "Run canonical, paraphrased, compact, and follow-up briefing prompts in a new Codex task."
+  }
+}

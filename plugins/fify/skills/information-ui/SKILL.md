@@ -5,6 +5,16 @@ description: Turn a fully grounded answer into an interactive Fify information v
 
 # Fify information UI
 
+## Hard availability gate for explicit Fify requests
+
+When the user tags `@Fify`, the first tool action must be an exact lookup for
+`mcp__fify__render_information_ui` in `ALL_TOOLS`. Do this before commentary,
+browsing, file inspection, research, or answer composition. If the exact tool
+is absent, terminate the turn immediately with one short availability sentence.
+Do not continue researching and do not imply that the renderer may mount later
+in the same task. An installed skill does not prove that its MCP server was
+loaded into the current task.
+
 1. Complete all factual reasoning, retrieval, and source checking before calling Fify. Fify is a presentation compiler, not a source of facts.
    - Fast path: when the user already supplied the facts or source material needed for the requested view, treat that material as the grounding. Do not browse, enrich, or re-research it unless accuracy or freshness requires verification.
    - Prepare the envelope in one pass and call the tool immediately after grounding. Do not inspect files, run shell commands, probe the renderer, or narrate internal composition work.
@@ -21,7 +31,14 @@ description: Turn a fully grounded answer into an interactive Fify information v
    - Supply one to eight semantic sections and at most twelve items per section.
    - Give every source, section, and item a stable unique semantic ID.
    - Attach only source IDs that exist in `sources`; use public HTTPS source URLs.
-   - Optionally include up to four pre-resolved grounded `media` records for other visual evidence. Use only an exact openly licensed image URL already established during research from `upload.wikimedia.org` or `api.openverse.org`, accurate alt text and caption, and an existing `sourceId`. Never invent or rewrite media URLs; omit media if any provenance is uncertain.
+   - Optionally include up to four pre-resolved grounded `media` records for other visual evidence. Use only an exact image URL already established during research from `upload.wikimedia.org`, `api.openverse.org`, or the supported official product hosts `www.apple.com`, `www.oppo.com`, and `www.sony.com`, with accurate alt text, caption, and an existing `sourceId`. Use `role: "illustration"` for product imagery; `product` is not a schema role. Never invent or rewrite media URLs; omit media if any provenance is uncertain. Optional media is enhancement-only: Fify will discard an unsupported media record and still render the grounded interactive view.
+   - For a product comparison, use the dedicated comparison contract:
+     - Resolve misspellings or ambiguous names first. Use the canonical product names—not quoted raw user spellings—as option labels everywhere. Put any necessary disambiguation in the grounded answer or a supporting `Assumptions` section; never make it a comparison criterion.
+     - Keep canonical option labels identical and in the same order across every comparison criterion. Support two through five options.
+     - For physical products, search for exact product imagery while researching the facts. When official or openly licensed imagery is available from a supported host, include one attributed `media` record per option and set `media.subject` to the exact canonical option label. Do not add decorative or loosely related images; omit a product image only when no trustworthy supported direct image URL was established.
+     - Put an optional grounded recommendation in a section titled `Recommendation`, `Verdict`, `Answer`, or `Summary`. Its first item `value` should be the exact recommended option label and `detail` should contain the grounded rationale.
+     - Use at least three separate shared-criterion sections when the grounded facts support them—for example `Starting price`, `Best fit`, `Battery`, `Performance`, or `Tradeoffs`. Every criterion section must repeat the exact canonical option names in `label`, put one scannable criterion value in `value`, and keep only that criterion's explanation in `detail`. Never pack the whole specification sheet into one criterion.
+     - Do not author card layout, image crops, selection styling, or compact behavior in the envelope. Fify owns the decision strip, product rail, aligned matrix, and pinned-default compact view.
    - Include no more than two short natural-language refinements.
    - Keep the whole envelope under 24,000 characters.
    - For an executive, leadership, board, or decision briefing, use the dedicated briefing contract instead of imitating a dashboard:

@@ -14,6 +14,14 @@ pnpm install
 pnpm codex:install
 ```
 
+The installer refuses to replace Fify while the ChatGPT/Codex desktop MCP host is running. Fully quit the app with Command-Q, run the install from Terminal, then reopen it. A new task alone does not refresh the long-lived MCP host. Then run:
+
+```bash
+pnpm codex:verify-host
+```
+
+The preflight rejects a stale desktop host and separately checks the exact six-section, three-image comparison through `render_information_ui`. Treat the plugin as ready only after it passes and a brand-new tagged desktop task mounts the native widget. Do not resume a task created before installation; its MCP tool snapshot remains stale.
+
 This path requires Node.js 22+, pnpm 11+, and a Codex installation that supports plugin commands.
 
 Then start a new Codex task. Tag `@Fify` or explicitly ask for an interactive view. Fify is mention-only, so ordinary untagged requests remain standard Codex answers.

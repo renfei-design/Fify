@@ -1,0 +1,50 @@
+{
+  "version": "1.0",
+  "id": "workflow-action",
+  "name": "Workflow and action",
+  "reviewedAt": "2026-08-27",
+  "contract": {
+    "userJob": "Review work items, ownership, approvals, and status without implying an external action occurred.",
+    "triggers": ["workflow", "review queue", "approval status"],
+    "exclusions": ["execute action", "simple checklist"],
+    "roles": ["work-item", "owner", "status", "approval", "next-action"],
+    "layout": {
+      "wide": "Align work items with owners, states, approvals, and safe next actions.",
+      "compact": "Stack each work item with its owner and state while keeping filters secondary.",
+      "minimumItems": 1,
+      "maximumItems": 25
+    },
+    "interactions": ["filter", "select-item", "follow-up-refinement"],
+    "fallback": "Preserve work items, owners, approvals, status, action boundaries, and sources."
+  },
+  "implementation": {
+    "blueprints": ["workflow-action"],
+    "components": ["Checklist", "Table", "Tabs", "Progress", "Steps"]
+  },
+  "quality": {
+    "stage": "baseline",
+    "priority": "P2",
+    "scores": {
+      "contract": 2,
+      "visualParity": 2,
+      "canvas": 2,
+      "interactionFit": 2,
+      "runtime": 3
+    },
+    "evidence": {
+      "automated": "partial",
+      "deterministicPreview": "partial",
+      "installedCodex": "pending",
+      "humanReview": "pending"
+    },
+    "refs": [
+      "apps/mcp-app/scripts/interaction-preview.mjs",
+      "packages/core/src/representation.ts"
+    ],
+    "gaps": [
+      "Work items, owners, approvals, filters, and actions lack a coherent state model and visual hierarchy.",
+      "The read-only versus consequential-action boundary needs scenario-specific testing."
+    ],
+    "nextAction": "Define a non-consequential review workflow before adding broader action affordances."
+  }
+}

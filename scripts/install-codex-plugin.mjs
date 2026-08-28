@@ -1,7 +1,11 @@
 import { copyFile, mkdir, rm } from "node:fs/promises";
 import path from "node:path";
-import { spawn } from "node:child_process";
+import { execFile, spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { promisify } from "node:util";
+import { parseDesktopAppServerStart } from "./verify-codex-host.mjs";
+
+const execute = promisify(execFile);
 
 const projectRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -19,6 +23,7 @@ const bundledServer = path.join(
 const installedServer = path.join(serverRoot, "dist", "server.mjs");
 const dryRun = process.argv.includes("--dry-run");
 const bundleOnly = process.argv.includes("--bundle-only");
+const allowRunningHost = process.argv.includes("--allow-running-host");
 
 function display(file, args) {
   return [file, ...args]
@@ -78,6 +83,26 @@ async function marketplaceIsConfigured() {
   });
 }
 
+async function assertDesktopIsStoppedBeforeInstall() {
+  if (bundleOnly || allowRunningHost || process.platform !== "darwin") return;
+  if (dryRun) {
+    console.log(
+      "\n> Refuse installation if the ChatGPT/Codex desktop MCP host is running.",
+    );
+    return;
+  }
+  const { stdout } = await execute("ps", ["-axo", "lstart=,command="]);
+  if (parseDesktopAppServerStart(stdout) == null) return;
+  throw new Error(
+    [
+      "Fify installation stopped before changing the active plugin.",
+      "The ChatGPT/Codex desktop MCP host is still running and cannot hot-reload a replaced plugin bundle.",
+      "Fully quit the desktop app with Command-Q, run `pnpm codex:install` from Terminal, then reopen the app and create a brand-new task.",
+      "Use `--allow-running-host` only for controlled diagnostics that will be followed by a full restart.",
+    ].join("\n"),
+  );
+}
+
 console.log("Preparing the portable Fify Codex plugin…");
 await run("corepack", ["pnpm", "plugin:build"]);
 if (!dryRun) {
@@ -97,12 +122,18 @@ await run("corepack", [
 await run("node", ["scripts/validate-codex-plugin.mjs", "--require-bundle"]);
 
 if (!bundleOnly) {
+  await assertDesktopIsStoppedBeforeInstall();
   if (await marketplaceIsConfigured())
     console.log("\n> Repository marketplace is already configured.");
   else await run("codex", ["plugin", "marketplace", "add", projectRoot]);
   await run("codex", ["plugin", "add", "fify@personal"]);
+  await run("codex", ["mcp", "get", "fify"]);
   console.log(
-    "\nFify is installed. Start a new Codex task, then tag @Fify or explicitly request an interactive view.",
+    [
+      "\nFify's files are installed, but the running Codex MCP host is not refreshed by opening a new task.",
+      "Fully quit ChatGPT/Codex and reopen it before testing Fify. Closing a window or returning to an existing task is not enough.",
+      "After reopening, run `pnpm codex:verify-host` from this repository, then create a brand-new tagged task. This preflight must pass and the new desktop task must mount before Fify is accepted as ready.",
+    ].join("\n"),
   );
 } else {
   console.log("\nPortable plugin bundle is ready in plugins/fify/server.");
