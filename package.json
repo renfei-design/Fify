@@ -51,10 +51,10 @@
   "devDependencies": {
     "@axe-core/playwright": "4.13.0",
     "@playwright/test": "1.62.1",
-    "@types/node": "^22.10.0",
+    "@types/node": "^26.3.0",
     "prettier": "^3.7.4",
-    "turbo": "^2.7.4",
-    "typescript": "5.9.2",
-    "vitest": "4.0.17"
+    "turbo": "^2.10.11",
+    "typescript": "7.0.2",
+    "vitest": "4.1.11"
   }
 }
